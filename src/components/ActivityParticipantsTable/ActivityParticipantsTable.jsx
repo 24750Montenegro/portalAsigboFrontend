@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { Pagination } from '@mui/material';
 import { hasStudentIds, withStudentIdHeader } from '@helpers/studentIdColumn';
 import useActivityParticipants from '@hooks/useActivityParticipants';
+import RefreshButton from '@components/RefreshButton';
 import styles from './ActivityParticipantsTable.module.css';
 import Table from '../Table/Table';
 import TableRow from '../TableRow/TableRow';
@@ -15,7 +16,7 @@ import UserNameLink from '../UserNameLink/UserNameLink';
  */
 function ActivityParticipantsTable({ idActivity }) {
   const {
-    participants, total, pages, resultsPerPage, loading, error, page, setPage,
+    participants, total, pages, resultsPerPage, loading, error, page, setPage, refetch,
   } = useActivityParticipants(idActivity);
 
   const [paginationItems, setPaginationItems] = useState();
@@ -33,9 +34,13 @@ function ActivityParticipantsTable({ idActivity }) {
 
   return (
     <>
-      <p className={styles.counter}>
-        {`${total} ${total === 1 ? 'participante' : 'participantes'}`}
-      </p>
+      <div className={styles.toolbar}>
+        <p className={styles.counter}>
+          {`${total} ${total === 1 ? 'participante' : 'participantes'}`}
+        </p>
+        <RefreshButton onClick={refetch} loading={loading} />
+      </div>
+      {error && <p role="alert" className={styles.error}>{error.message}</p>}
       <Table
         header={withStudentIdHeader(['No.', '', 'Nombre', 'Promoción'], showStudentId)}
         loading={loading}

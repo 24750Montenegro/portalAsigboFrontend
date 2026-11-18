@@ -12,6 +12,7 @@ import { hasStudentIds, withStudentIdHeader } from '@helpers/studentIdColumn';
 import useActivityParticipants from '@hooks/useActivityParticipants';
 import AddUsersPopUp from '@components/AddUsersPopUp';
 import Button from '@components/Button';
+import RefreshButton from '@components/RefreshButton';
 import styles from './SelectActivityParticipantsTable.module.css';
 import ActivityParticipantsTableFilter from '../ActivityParticipantsTableFilter/ActivityParticipantsTableFilter';
 import Table from '../Table/Table';
@@ -45,6 +46,10 @@ const successText = {
 
 /** Estado real de una asignación (coincide con los valores del filtro de estado). */
 const statusLabel = (assignment) => (assignment.completed ? 'Completado' : 'Asignado');
+
+/** Horas de la asignación: las de la actividad más las adicionales (p. ej. las importadas). */
+const assignmentHours = (assignment) => (assignment.activity?.serviceHours ?? 0)
+  + (assignment.aditionalServiceHours ?? 0);
 
 /**
  * Participantes de una actividad para quien la gestiona: solo los asignados, con su estado, y un
@@ -211,13 +216,18 @@ function SelectActivityParticipantsTable({ idActivity }) {
         <p className={styles.counter}>
           {`${total} ${total === 1 ? 'participante' : 'participantes'}`}
         </p>
-        <Button text="Agregar participantes" onClick={openAdd} />
+        <div className={styles.toolbarActions}>
+          <RefreshButton onClick={refetch} loading={loading} />
+          <Button text="Agregar participantes" onClick={openAdd} />
+        </div>
       </div>
+
+      {error && <p role="alert" className={styles.error}>{error.message}</p>}
 
       <ActivityParticipantsTableFilter onChange={setFilters} />
 
       <Table
-        header={withStudentIdHeader(['No.', '', 'Nombre', 'Promoción', 'Estado', ''], showStudentId)}
+        header={withStudentIdHeader(['No.', '', 'Nombre', 'Promoción', 'Estado', 'Horas', ''], showStudentId)}
         loading={loading}
         showNoResults={Boolean(error) || (!loading && participants.length === 0)}
         resetTableHeight={resetTableHeightTrigger}
@@ -239,6 +249,7 @@ function SelectActivityParticipantsTable({ idActivity }) {
               {showStudentId ? <td className={styles.promotionRow}>{user.studentId ?? '—'}</td> : []}
               <td className={styles.promotionRow}>{user.promotion}</td>
               <td className={styles.statusRow}>{statusLabel(assignment)}</td>
+              <td className={styles.hoursRow}>{assignmentHours(assignment)}</td>
               <td className={styles.buttonRow}>
                 <OptionsButton
                   onMenuVisibleChange={handleActionMenuVisibilityChange}

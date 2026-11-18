@@ -23,8 +23,12 @@
   order: 3;
 }
 
-.buttonRow{
+.hoursRow{
   order: 4;
+}
+
+.buttonRow{
+  order: 5;
   overflow: visible !important;
 }
 
@@ -44,4 +48,16 @@
 .counter{
   margin: 0;
   font-weight: 600;
+}
+
+.toolbarActions{
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.error{
+  margin: 0 0 12px;
+  color: rgb(144, 10, 0);
 }

@@ -122,4 +122,104 @@ describe('SelectActivityParticipantsTable', () => {
     // Tras asignar, la tabla se recarga.
     await waitFor(() => expect(participantCalls(fetchMock).length).toBeGreaterThan(callsBefore));
   });
+
+  describe('botón «Actualizar»', () => {
+    const activityInfo = { id: 'act1', name: 'Actividad', serviceHours: 2 };
+    const beforeImport = {
+      total: 9,
+      pages: 2,
+      resultsPerPage: 7,
+      result: [{
+        id: 'a1', user: ana, activity: activityInfo, completed: false, aditionalServiceHours: 0,
+      }],
+    };
+    const afterImport = {
+      ...beforeImport,
+      result: [{
+        id: 'a1', user: ana, activity: activityInfo, completed: true, aditionalServiceHours: 3,
+      }],
+    };
+
+    /** Responde `beforeImport` hasta que se llame a `importDone()`; luego `afterImport` o `reply()`. */
+    const refreshApi = ({ reply } = {}) => {
+      let imported = false;
+      const fetchMock = mockFetch((url) => {
+        if (url.pathname.endsWith('/promotion')) return promotionsReply;
+        if (url.pathname.endsWith('/activity/act1/assignment')) {
+          if (!imported) return { body: beforeImport };
+          return reply ? reply() : { body: afterImport };
+        }
+        return undefined;
+      });
+      return { fetchMock, importDone: () => { imported = true; } };
+    };
+
+    /** Filtra por «Asignado» y pasa a la página 2, como haría quien revisa tras importar. */
+    const goToFilteredSecondPage = async (fetchMock) => {
+      await screen.findByText('Ana Pérez');
+      fireEvent.change(screen.getByDisplayValue('Estado'), { target: { value: 'pending' } });
+      await waitFor(() => expect(participantCalls(fetchMock).at(-1).searchParams.get('status')).toBe('pending'));
+      fireEvent.click(screen.getByRole('button', { name: /page 2/i }));
+      await waitFor(() => expect(participantCalls(fetchMock).at(-1).searchParams.get('page')).toBe('1'));
+      await screen.findByText('Ana Pérez');
+    };
+
+    it('vuelve a pedir la misma página con los mismos filtros y muestra estado y horas nuevos', async () => {
+      const { fetchMock, importDone } = refreshApi();
+      renderWithApp(<SelectActivityParticipantsTable idActivity="act1" />);
+      await goToFilteredSecondPage(fetchMock);
+
+      expect(screen.getByRole('cell', { name: 'Asignado' })).toBeInTheDocument();
+      expect(screen.getByRole('cell', { name: '2' })).toBeInTheDocument();
+      const callsBefore = participantCalls(fetchMock).length;
+
+      importDone();
+      fireEvent.click(screen.getByRole('button', { name: 'Actualizar' }));
+
+      await waitFor(() => expect(participantCalls(fetchMock).length).toBe(callsBefore + 1));
+      const refresh = participantCalls(fetchMock).at(-1);
+      expect(refresh.searchParams.get('page')).toBe('1');
+      expect(refresh.searchParams.get('status')).toBe('pending');
+
+      expect(await screen.findByRole('cell', { name: 'Completado' })).toBeInTheDocument();
+      expect(screen.getByRole('cell', { name: '5' })).toBeInTheDocument();
+      // Sigue en la página 2.
+      expect(screen.getByRole('button', { name: /page 2/i })).toHaveAttribute('aria-current', 'true');
+    });
+
+    it('queda deshabilitado mientras recarga', async () => {
+      let release;
+      const { fetchMock, importDone } = refreshApi({
+        reply: () => new Promise((resolve) => { release = () => resolve({ body: afterImport }); }),
+      });
+      renderWithApp(<SelectActivityParticipantsTable idActivity="act1" />);
+      await screen.findByText('Ana Pérez');
+
+      importDone();
+      const button = screen.getByRole('button', { name: 'Actualizar' });
+      expect(button).toBeEnabled();
+      fireEvent.click(button);
+
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Actualizar' })).toBeDisabled());
+      expect(screen.getByRole('button', { name: 'Actualizar' })).toHaveAttribute('aria-busy', 'true');
+
+      release();
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Actualizar' })).toBeEnabled());
+      expect(await screen.findByRole('cell', { name: 'Completado' })).toBeInTheDocument();
+      expect(participantCalls(fetchMock).length).toBeGreaterThan(1);
+    });
+
+    it('muestra el error si la recarga falla', async () => {
+      const { importDone } = refreshApi({
+        reply: () => ({ status: 500, body: { err: 'No se pudo cargar la lista.' } }),
+      });
+      renderWithApp(<SelectActivityParticipantsTable idActivity="act1" />);
+      await screen.findByText('Ana Pérez');
+
+      importDone();
+      fireEvent.click(screen.getByRole('button', { name: 'Actualizar' }));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo cargar la lista.');
+    });
+  });
 });

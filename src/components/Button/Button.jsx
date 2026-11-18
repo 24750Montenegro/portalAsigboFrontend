@@ -17,6 +17,8 @@ function Button({
   // eslint-disable-next-line react/prop-types
   buttonRef,
   title,
+  ariaLabel,
+  ariaBusy,
 }) {
   return (
     <button
@@ -31,6 +33,8 @@ function Button({
       onClick={onClick}
       disabled={disabled}
       ref={buttonRef}
+      aria-label={ariaLabel ?? undefined}
+      aria-busy={ariaBusy ?? undefined}
     >
       {children || text}
     </button>
@@ -49,6 +53,8 @@ Button.propTypes = {
   emptyBlue: PropTypes.bool,
   children: PropTypes.node,
   title: PropTypes.string,
+  ariaLabel: PropTypes.string,
+  ariaBusy: PropTypes.bool,
 };
 
 Button.defaultProps = {
@@ -63,5 +69,7 @@ Button.defaultProps = {
   disabled: false,
   children: null,
   title: null,
+  ariaLabel: null,
+  ariaBusy: null,
 };
 export default Button;
