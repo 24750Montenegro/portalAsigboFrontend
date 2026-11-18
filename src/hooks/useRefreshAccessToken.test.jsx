@@ -5,6 +5,7 @@ import useRefreshAccessToken from './useRefreshAccessToken';
 import SessionContext from '../context/SessionContext';
 import { serverHost } from '../config';
 
+// eslint-disable-next-line react/prop-types
 const wrapperWith = (value) => function Wrapper({ children }) {
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 };
