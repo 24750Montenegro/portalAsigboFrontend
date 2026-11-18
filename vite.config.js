@@ -14,7 +14,8 @@ export default defineConfig(({ mode }) => {
   const useProxy = serverHost.startsWith('/');
 
   return {
-    plugins: [eslint(), react()],
+    // En vitest no se lintéa en cada transform: eslint corre aparte con `npm run lint`.
+    plugins: process.env.VITEST ? [react()] : [eslint(), react()],
     resolve: {
       alias: [
         { find: '@', replacement: path.resolve(__dirname, './src') },
