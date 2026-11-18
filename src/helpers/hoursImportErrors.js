@@ -15,7 +15,6 @@ const labels = {
   sin_permiso: 'No tiene permiso para cargar horas en esta actividad',
   cupo_lleno: 'La actividad no tiene cupos disponibles',
   conflicto_horas: 'El becado ya tiene esta actividad completada con otras horas',
-  horas_menores_que_la_actividad: 'Las horas son menores que las horas base de la actividad',
 };
 
 export default function hoursImportErrorLabel(kind) {
