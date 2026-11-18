@@ -7,6 +7,7 @@ import usePopUp from '@hooks/usePopUp';
 import { serverHost } from '@/config';
 import AddUsersPopUp from '@components/AddUsersPopUp';
 import Button from '@components/Button';
+import RefreshButton from '@components/RefreshButton';
 import SuccessNotificationPopUp from '@components/SuccessNotificationPopUp';
 import ErrorNotificationPopUp from '@components/ErrorNotificationPopUp';
 import styles from './ActivityResponsibles.module.css';
@@ -22,7 +23,7 @@ import ActivityResponsiblesTable from '../ActivityResponsiblesTable/ActivityResp
 function ActivityResponsibles({ activityData, canManage, onChange }) {
   const token = useToken();
   const {
-    responsibles, loading, refetch,
+    responsibles, loading, error, refetch,
   } = useActivityResponsibles(activityData?.id, activityData?.responsible);
 
   const {
@@ -69,8 +70,12 @@ function ActivityResponsibles({ activityData, canManage, onChange }) {
         <p className={styles.counter}>
           {`${responsibles.length} ${responsibles.length === 1 ? 'encargado' : 'encargados'}`}
         </p>
-        {canManage && <Button text="Agregar encargados" onClick={openAdd} />}
+        <div className={styles.toolbarActions}>
+          <RefreshButton onClick={refetch} loading={loading} />
+          {canManage && <Button text="Agregar encargados" onClick={openAdd} />}
+        </div>
       </div>
+      {error && <p role="alert" className={styles.error}>{error.message}</p>}
       <ActivityResponsiblesTable responsibles={responsibles} loading={loading} />
 
       <AddUsersPopUp

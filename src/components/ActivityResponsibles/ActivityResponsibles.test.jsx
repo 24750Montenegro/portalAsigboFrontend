@@ -70,4 +70,50 @@ describe('ActivityResponsibles', () => {
     expect(screen.getByText(/2 encargados/i)).toBeInTheDocument();
     expect(onChange).toHaveBeenCalled();
   });
+
+  describe('botón «Actualizar»', () => {
+    it('vuelve a pedir la actividad y muestra los encargados actuales', async () => {
+      const fetchMock = api();
+      renderWithApp(<ActivityResponsibles activityData={activity} />);
+      expect(screen.queryByRole('cell', { name: 'Carla Ruiz' })).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Actualizar' }));
+
+      expect(await screen.findByRole('cell', { name: 'Carla Ruiz' })).toBeInTheDocument();
+      expect(screen.getByText(/2 encargados/i)).toBeInTheDocument();
+      const gets = urls(fetchMock).filter((url) => /\/activity\/act1$/.test(url.pathname));
+      expect(gets).toHaveLength(1);
+    });
+
+    it('queda deshabilitado mientras recarga', async () => {
+      let release;
+      mockFetch((url) => {
+        if (!url.pathname.endsWith('/activity/act1')) return undefined;
+        return new Promise((resolve) => {
+          release = () => resolve({ body: { ...activity, responsible: [responsible, candidate] } });
+        });
+      });
+      renderWithApp(<ActivityResponsibles activityData={activity} />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Actualizar' }));
+
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Actualizar' })).toBeDisabled());
+      expect(screen.getByRole('button', { name: 'Actualizar' })).toHaveAttribute('aria-busy', 'true');
+      release();
+      expect(await screen.findByRole('cell', { name: 'Carla Ruiz' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Actualizar' })).toBeEnabled();
+    });
+
+    it('muestra el error si la recarga falla y conserva la lista', async () => {
+      mockFetch((url) => (url.pathname.endsWith('/activity/act1')
+        ? { status: 500, body: { err: 'No se pudo cargar la actividad.' } }
+        : undefined));
+      renderWithApp(<ActivityResponsibles activityData={activity} />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Actualizar' }));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo cargar la actividad.');
+      expect(screen.getByText('Rosa Encargada')).toBeInTheDocument();
+    });
+  });
 });

@@ -50,3 +50,15 @@
   margin: 0;
   font-weight: 600;
 }
+
+.toolbarActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.error {
+  margin: 12px 0 0;
+  color: rgb(144, 10, 0);
+}
