@@ -10,7 +10,8 @@ import consts from '../../helpers/consts';
 
 /**
  * Componente para filtrado de tabla de participantes de actividad.
- * El filtro status devuelve, sin seleccionar: '', inscrito: '1', completado: '2'
+ * El filtro status devuelve los estados reales de la asignación: sin seleccionar '', asignado (sin
+ * completar) 'pending', completado 'completed'. Son los valores que acepta `GET .../assignment`.
  * @param onChange Object. Devuelve un objeto con los filtros {status, promotion, search}
  * @returns
  */
@@ -49,7 +50,7 @@ function ActivityParticipantsTableFilter({
           value={filter.status}
           onChange={(e) => handleChange('status', e.target.value)}
           options={
-            [{ title: 'Inscrito', value: '1' }, { title: 'No completado', value: '2' }, { title: 'Completado', value: '3' }]
+            [{ title: 'Asignado', value: 'pending' }, { title: 'Completado', value: 'completed' }]
           }
         />
         <InputSearchSelect

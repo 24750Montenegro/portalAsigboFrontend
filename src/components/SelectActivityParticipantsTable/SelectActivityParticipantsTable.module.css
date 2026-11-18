@@ -31,3 +31,17 @@
 .optionsButton{
   margin-left: auto;
 }
+
+.toolbar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.counter{
+  margin: 0;
+  font-weight: 600;
+}
