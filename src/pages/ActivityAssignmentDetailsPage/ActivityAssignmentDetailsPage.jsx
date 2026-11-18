@@ -60,9 +60,11 @@ function ActivityAssignmentDetailsPage() {
   const token = useToken();
   const navigate = useNavigate();
 
+  // El mínimo del ajuste depende de las horas base: base + ajuste nunca baja de 0.
+  const baseServiceHours = assignmentData?.activity?.serviceHours ?? 0;
   const {
     form, error, setData, validateField, clearFieldError,
-  } = useForm(aditionalServiceHoursSchema);
+  } = useForm(aditionalServiceHoursSchema(baseServiceHours));
 
   const [currentAction, setCurrentAction] = useState();
   const [assignmentStatus, setAssignmentStatus] = useState(null);
@@ -307,7 +309,7 @@ function ActivityAssignmentDetailsPage() {
             <InputNumber
               className={styles.aditionalServiceHours}
               title="Horas de servicio adicionales"
-              min={0}
+              min={-baseServiceHours}
               max={999}
               value={form?.aditionalServiceHours?.toString()}
               error={error?.aditionalServiceHours}
