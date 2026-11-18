@@ -11,6 +11,7 @@
     {
       "files": [
         "src/**/*.test.{js,jsx}",
+        "build/**",
         "src/test/**",
         "vitest.config.js"
       ],

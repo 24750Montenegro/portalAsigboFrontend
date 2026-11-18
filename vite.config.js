@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import eslint from 'vite-plugin-eslint';
 import path from 'path';
+import spaFallback from './build/spaFallback';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -15,7 +16,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     // En vitest no se lintéa en cada transform: eslint corre aparte con `npm run lint`.
-    plugins: process.env.VITEST ? [react()] : [eslint(), react()],
+    plugins: process.env.VITEST ? [react()] : [eslint(), react(), spaFallback()],
     resolve: {
       alias: [
         { find: '@', replacement: path.resolve(__dirname, './src') },
