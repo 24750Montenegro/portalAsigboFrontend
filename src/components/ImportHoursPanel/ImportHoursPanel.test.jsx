@@ -31,4 +31,11 @@ describe('ImportHoursPanel — texto de ayuda', () => {
 
     expect(screen.getByText(/comas o punto y coma/i)).toBeInTheDocument();
   });
+
+  it('aclara que la hora admite segundos y que se ignoran', () => {
+    renderPanel('multi');
+
+    expect(screen.getByText('HH:mm:ss', { selector: 'code' })).toBeInTheDocument();
+    expect(screen.getByText(/segundos se ignoran/i)).toBeInTheDocument();
+  });
 });

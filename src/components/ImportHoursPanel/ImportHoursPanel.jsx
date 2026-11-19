@@ -121,7 +121,9 @@ function ImportHoursPanel({ mode, idActivity, onDone }) {
               <code>{format}</code>
             </React.Fragment>
           ))}
-          {'. Con barras siempre es día/mes: 05/11/2026 es el 5 de noviembre. '}
+          {'. La hora también puede llevar segundos ('}
+          <code>HH:mm:ss</code>
+          {'); los segundos se ignoran. Con barras siempre es día/mes: 05/11/2026 es el 5 de noviembre. '}
           Sin hora, se usa la actividad con ese nombre y eje de ese día (si no existe, se crea a las 00:00).
         </p>
       )}

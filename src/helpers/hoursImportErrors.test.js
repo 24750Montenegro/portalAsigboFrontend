@@ -8,4 +8,8 @@ describe('hoursImportErrorLabel', () => {
       expect(label).toContain(format);
     });
   });
+
+  it('el error de fecha dice que la hora admite segundos', () => {
+    expect(hoursImportErrorLabel('fecha_invalida')).toMatch(/HH:mm:ss/);
+  });
 });
