@@ -2,7 +2,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import UserNameLink from '@components/UserNameLink';
-import { hasStudentIds, withStudentIdHeader } from '@helpers/studentIdColumn';
+import { withStudentIdHeader } from '@helpers/studentIdColumn';
+import useShowStudentIdColumn from '@hooks/useShowStudentIdColumn';
 import Table from '../Table/Table';
 import TableRow from '../TableRow/TableRow';
 import UserPicture from '../UserPicture';
@@ -11,7 +12,7 @@ import styles from './UserTable.module.css';
 function UserTable({
   users, loading, noResults, className,
 }) {
-  const showStudentId = hasStudentIds(users);
+  const showStudentId = useShowStudentIdColumn(users);
 
   return (
     <Table
