@@ -8,6 +8,10 @@ import useToken from '@hooks/useToken';
 import { serverHost } from '@/config';
 import hoursImportErrorLabel from '@helpers/hoursImportErrors';
 import styles from './ImportHoursPanel.module.css';
+import HoursRowsTable from './HoursRowsTable';
+import ActivitiesToCreate from './ActivitiesToCreate';
+import HoursWarnings from './HoursWarnings';
+import AffectedActivities from './AffectedActivities';
 
 const TEMPLATE_NAMES = {
   activity: 'plantilla-horas-actividad.csv',
@@ -217,9 +221,20 @@ function ImportHoursPanel({ mode, idActivity, onDone }) {
             </p>
           )}
 
+          {/* Avisos y actividades nuevas van antes de la tabla y del botón: es lo primero que hay que revisar. */}
+          <HoursWarnings warnings={preview.warnings ?? []} />
+          <ActivitiesToCreate activities={preview.activitiesToCreate ?? []} />
+
+          {preview.rows?.length > 0 && (
+            <>
+              <h3 className={styles.sectionTitle}>Fila por fila</h3>
+              <HoursRowsTable rows={preview.rows} />
+            </>
+          )}
+
           {errors.length === 0 && preview.preview?.length > 0 && (
             <div className={styles.tableWrapper}>
-              <table className={styles.table}>
+              <table className={styles.table} aria-label="Resumen por becado">
                 <thead>
                   <tr>
                     <th>Carné</th>
@@ -258,6 +273,7 @@ function ImportHoursPanel({ mode, idActivity, onDone }) {
           <p className={styles.success}>
             {`Se sumaron ${applied.hoursAdded} horas (${applied.assignmentsCreated} asignaciones nuevas y ${applied.assignmentsCompleted} completadas).`}
           </p>
+          <AffectedActivities activities={applied.activities ?? []} />
         </section>
       )}
       {applied && !applied.applied && (
