@@ -16,7 +16,8 @@ import LoadingView from '@components/LoadingView';
 import SuccessNotificationPopUp from '@components/SuccessNotificationPopUp';
 import ErrorNotificationPopUp from '@components/ErrorNotificationPopUp';
 import getTokenPayload from '@helpers/getTokenPayload';
-import { hasStudentIds, withStudentIdHeader } from '@helpers/studentIdColumn';
+import { withStudentIdHeader } from '@helpers/studentIdColumn';
+import useShowStudentIdColumn from '@hooks/useShowStudentIdColumn';
 import styles from './SelectAdminTable.module.css';
 import UserNameLink from '../UserNameLink/UserNameLink';
 
@@ -156,7 +157,7 @@ function SelectAdminTable() {
     setCurrentPage(0);
   };
 
-  const showStudentId = hasStudentIds(users?.result);
+  const showStudentId = useShowStudentIdColumn(users?.result);
 
   return (
     <div className={styles.selectAdminTable}>

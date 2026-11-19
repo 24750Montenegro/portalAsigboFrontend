@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Pagination } from '@mui/material';
 import { PiMicrosoftExcelLogoFill as ExcelIcon } from 'react-icons/pi';
-import { hasStudentIds, withStudentIdHeader } from '@helpers/studentIdColumn';
+import { withStudentIdHeader } from '@helpers/studentIdColumn';
+import useShowStudentIdColumn from '@hooks/useShowStudentIdColumn';
 import styles from './UsersReportTable.module.css';
 import PromotionsSearchSelect from '../PromotionsSearchSelect/PromotionsSearchSelect';
 import useFetch from '../../hooks/useFetch';
@@ -87,7 +88,7 @@ function UsersReportTable() {
       media.onchange = null;
     };
   }, []);
-  const showStudentId = hasStudentIds(reportResult?.result);
+  const showStudentId = useShowStudentIdColumn(reportResult?.result);
 
   return (
     <div className={styles.usersReportTable}>

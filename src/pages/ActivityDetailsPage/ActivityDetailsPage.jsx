@@ -234,7 +234,13 @@ function ActivityDetailsPage() {
           <Route path="/" element={<ActivityDetails data={activity} />} />
           <Route
             path="/encargados"
-            element={<ActivityResponsibles activityData={activity} />}
+            element={(
+              <ActivityResponsibles
+                activityData={activity}
+                canManage={isActivityOwner}
+                onChange={fireUpdateActivityTrigger}
+              />
+            )}
           />
           <Route
             path="/participantes"

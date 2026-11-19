@@ -11,7 +11,8 @@ import { Pagination } from '@mui/material';
 import SuccessNotificationPopUp from '@components/SuccessNotificationPopUp';
 import ErrorNotificationPopUp from '@components/ErrorNotificationPopUp';
 import ConfirmationPopUp from '@components/ConfirmationPopUp';
-import { hasStudentIds, withStudentIdHeader } from '@helpers/studentIdColumn';
+import { withStudentIdHeader } from '@helpers/studentIdColumn';
+import useShowStudentIdColumn from '@hooks/useShowStudentIdColumn';
 import LoadingView from '../LoadingView/LoadingView';
 import Table from '../Table/Table';
 import TableRow from '../TableRow/TableRow';
@@ -259,7 +260,7 @@ function ManageUsersTable() {
     openError();
   }, [errorDelete]);
 
-  const showStudentId = hasStudentIds(users);
+  const showStudentId = useShowStudentIdColumn(users);
 
   return (
     <div className={styles.manageUsersTable}>

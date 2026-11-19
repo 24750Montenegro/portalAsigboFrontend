@@ -8,11 +8,17 @@ import useToken from '@hooks/useToken';
 import { serverHost } from '@/config';
 import hoursImportErrorLabel from '@helpers/hoursImportErrors';
 import styles from './ImportHoursPanel.module.css';
+import HoursRowsTable from './HoursRowsTable';
+import ActivitiesToCreate from './ActivitiesToCreate';
+import HoursWarnings from './HoursWarnings';
+import AffectedActivities from './AffectedActivities';
 
 const TEMPLATE_NAMES = {
   activity: 'plantilla-horas-actividad.csv',
   multi: 'plantilla-horas-varias-actividades.csv',
 };
+
+const DATE_FORMATS = ['AAAA-MM-DD HH:mm', 'AAAA-MM-DD', 'DD/MM/AAAA HH:mm', 'DD/MM/AAAA'];
 
 const COLUMNS = {
   activity: 'carnet, horas',
@@ -99,13 +105,28 @@ function ImportHoursPanel({ mode, idActivity, onDone }) {
   return (
     <div className={styles.panel}>
       <p className={styles.instructions}>
-        {'El archivo debe ser un CSV (UTF-8) separado por comas, con las columnas: '}
+        {'El archivo debe ser un CSV UTF-8 separado por comas o punto y coma (como lo guarda Excel), con las columnas: '}
         <strong>{COLUMNS[mode]}</strong>
         .
         {mode === 'multi'
-          ? ' La fecha va como AAAA-MM-DD HH:mm (hora de Guatemala). Si la actividad no existe, se crea.'
+          ? ' Si la actividad no existe, se crea.'
           : ' Las horas son el total que recibe cada becado en esta actividad.'}
       </p>
+      {mode === 'multi' && (
+        <p className={styles.instructions}>
+          {'La fecha va en hora de Guatemala, en uno de estos formatos: '}
+          {DATE_FORMATS.map((format, index) => (
+            <React.Fragment key={format}>
+              {index > 0 && (index === DATE_FORMATS.length - 1 ? ' o ' : ', ')}
+              <code>{format}</code>
+            </React.Fragment>
+          ))}
+          {'. La hora también puede llevar segundos ('}
+          <code>HH:mm:ss</code>
+          {'); los segundos se ignoran. Con barras siempre es día/mes: 05/11/2026 es el 5 de noviembre. '}
+          Sin hora, se usa la actividad con ese nombre y eje de ese día (si no existe, se crea a las 00:00).
+        </p>
+      )}
 
       <div className={styles.actions}>
         <Button text={loadingTemplate ? 'Descargando…' : 'Descargar plantilla'} emptyBlue onClick={handleTemplate} disabled={loadingTemplate} />
@@ -202,9 +223,20 @@ function ImportHoursPanel({ mode, idActivity, onDone }) {
             </p>
           )}
 
+          {/* Avisos y actividades nuevas van antes de la tabla y del botón: es lo primero que hay que revisar. */}
+          <HoursWarnings warnings={preview.warnings ?? []} />
+          <ActivitiesToCreate activities={preview.activitiesToCreate ?? []} />
+
+          {preview.rows?.length > 0 && (
+            <>
+              <h3 className={styles.sectionTitle}>Fila por fila</h3>
+              <HoursRowsTable rows={preview.rows} />
+            </>
+          )}
+
           {errors.length === 0 && preview.preview?.length > 0 && (
             <div className={styles.tableWrapper}>
-              <table className={styles.table}>
+              <table className={styles.table} aria-label="Resumen por becado">
                 <thead>
                   <tr>
                     <th>Carné</th>
@@ -243,6 +275,7 @@ function ImportHoursPanel({ mode, idActivity, onDone }) {
           <p className={styles.success}>
             {`Se sumaron ${applied.hoursAdded} horas (${applied.assignmentsCreated} asignaciones nuevas y ${applied.assignmentsCompleted} completadas).`}
           </p>
+          <AffectedActivities activities={applied.activities ?? []} />
         </section>
       )}
       {applied && !applied.applied && (

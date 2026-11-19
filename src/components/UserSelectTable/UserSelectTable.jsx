@@ -11,7 +11,8 @@ import { serverHost } from '@/config';
 import useCount from '@hooks/useCount';
 import UserNameLink from '@components/UserNameLink';
 import UserPicture from '@components/UserPicture';
-import { hasStudentIds, withStudentIdHeader } from '@helpers/studentIdColumn';
+import { withStudentIdHeader } from '@helpers/studentIdColumn';
+import useShowStudentIdColumn from '@hooks/useShowStudentIdColumn';
 import styles from './UserSelectTable.module.css';
 
 /**
@@ -19,9 +20,11 @@ import styles from './UserSelectTable.module.css';
  * @param defaultSelectedUsers Arreglo con la información de los usuarios a marcar por default.
  *    debe incluir {id, name, lastname, promotion, promotionGroup}
  * @param onChange función callback. Provee el listado de los id's de usuarios seleccionados.
+ * @param extraParams Parámetros extra para `GET /user` (un valor o un arreglo de valores), p. ej.
+ *    `{ excludeAssignedTo: idActivity }` o `{ exclude: [ids] }` para ocultar a los ya asignados.
  * @returns
  */
-function UserSelectTable({ defaultSelectedUsers, onChange }) {
+function UserSelectTable({ defaultSelectedUsers, onChange, extraParams }) {
   const [userFilters, setUserFilters] = useState({});
   const [paginationItems, setPaginationItems] = useState();
   const [currentPage, setCurrentPage] = useState(0);
@@ -108,6 +111,10 @@ function UserSelectTable({ defaultSelectedUsers, onChange }) {
 
     const searchParams = new URLSearchParams(filtersCopy);
 
+    Object.entries(extraParams ?? {}).forEach(([key, value]) => {
+      [value].flat().forEach((item) => searchParams.append(key, item));
+    });
+
     // si hay usuarios seleccionados por default , estos serán buscados primero
     defaultSelectedUsers?.forEach((user) => {
       searchParams.append('priority', user.id);
@@ -157,7 +164,7 @@ function UserSelectTable({ defaultSelectedUsers, onChange }) {
     if (onChange) onChange(selectedUsers.map((user) => user.id));
   }, [selectedUsers]);
 
-  const showStudentId = hasStudentIds(users?.result);
+  const showStudentId = useShowStudentIdColumn(users?.result);
 
   return (
     <>
@@ -231,9 +238,13 @@ UserSelectTable.propTypes = {
     }),
   ),
   onChange: PropTypes.func,
+  extraParams: PropTypes.objectOf(
+    PropTypes.oneOfType([PropTypes.string, PropTypes.arrayOf(PropTypes.string)]),
+  ),
 };
 
 UserSelectTable.defaultProps = {
   defaultSelectedUsers: null,
   onChange: null,
+  extraParams: null,
 };

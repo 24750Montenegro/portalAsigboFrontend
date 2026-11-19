@@ -28,6 +28,13 @@ import FilesTable from '../../components/FilesTable/FilesTable';
 import randomString from '../../helpers/randomString';
 import useToken from '../../hooks/useToken';
 import consts from '../../helpers/consts';
+import {
+  assignmentFilesAccept,
+  assignmentFilesHint,
+  assignmentFilesLimits,
+  describeAssignmentUpdateError,
+  selectFilesToAdd,
+} from '../../helpers/assignmentFiles';
 
 const actions = {
   unassign: 'desasignar',
@@ -60,15 +67,18 @@ function ActivityAssignmentDetailsPage() {
   const token = useToken();
   const navigate = useNavigate();
 
+  // El mínimo del ajuste depende de las horas base: base + ajuste nunca baja de 0.
+  const baseServiceHours = assignmentData?.activity?.serviceHours ?? 0;
   const {
     form, error, setData, validateField, clearFieldError,
-  } = useForm(aditionalServiceHoursSchema);
+  } = useForm(aditionalServiceHoursSchema(baseServiceHours));
 
   const [currentAction, setCurrentAction] = useState();
   const [assignmentStatus, setAssignmentStatus] = useState(null);
   const [assignmentFiles, setAssignmentFiles] = useState([]);
   const [filesToUpload, setFilesToUpload] = useState({});
   const [filesToRemove, setFilesToRemove] = useState([]);
+  const [fileErrors, setFileErrors] = useState([]);
 
   const [isConfirmationOpen, openConfirmation, closeConfirmation] = usePopUp();
   const [isSuccessOpen, openSuccess, closeSuccess] = usePopUp();
@@ -105,6 +115,7 @@ function ActivityAssignmentDetailsPage() {
     const { filesSaved } = assignmentActionResult;
     setFilesToUpload({}); // Limpiar archivos nuevos
     setFilesToRemove([]); // Limpiar archivos a eliminar
+    setFileErrors([]);
     if (Array.isArray(filesSaved)) {
       setAssignmentFiles((lastVal) => [...lastVal, ...filesSaved]);
     }
@@ -196,15 +207,22 @@ function ActivityAssignmentDetailsPage() {
     }
   };
 
+  const pendingFilesCount = Object.keys(filesToUpload).length;
+  const canAddFiles = pendingFilesCount < assignmentFilesLimits.maxPerUpload
+    && (assignmentFiles.length + pendingFilesCount) < assignmentFilesLimits.maxPerAssignment;
+
   const handleInputFileChange = (files) => {
-    const prevFilesSelectedNum = Object.keys(filesToUpload).length;
-    files?.forEach((file, index) => {
-      // Validar que no se llegue al máximo de 5 archivos
-      if ((prevFilesSelectedNum + assignmentFiles.length + index) >= 5) {
-        return;
-      }
-      const id = randomString(10);
-      setFilesToUpload((lastVal) => ({ ...lastVal, [id]: file }));
+    // Valida tipo, tamaño y cantidad antes de enviar; lo rechazado se explica en pantalla.
+    const { accepted, errors } = selectFilesToAdd(files ?? [], {
+      existingCount: assignmentFiles.length,
+      pendingCount: pendingFilesCount,
+    });
+    setFileErrors(errors);
+    if (accepted.length === 0) return;
+    setFilesToUpload((lastVal) => {
+      const value = { ...lastVal };
+      accepted.forEach((file) => { value[randomString(10)] = file; });
+      return value;
     });
   };
 
@@ -307,7 +325,7 @@ function ActivityAssignmentDetailsPage() {
             <InputNumber
               className={styles.aditionalServiceHours}
               title="Horas de servicio adicionales"
-              min={0}
+              min={-baseServiceHours}
               max={999}
               value={form?.aditionalServiceHours?.toString()}
               error={error?.aditionalServiceHours}
@@ -323,19 +341,31 @@ function ActivityAssignmentDetailsPage() {
               value={form?.notes}
             />
 
-            <InputFile
-              className={styles.inputFile}
-              onChange={handleInputFileChange}
-              disabled={
-                (Object.keys(filesToUpload).length + assignmentFiles.length) >= 5
-              }
-            />
+            <div className={styles.filesInputContainer}>
+              <InputFile
+                className={styles.inputFile}
+                onChange={handleInputFileChange}
+                accept={assignmentFilesAccept}
+                disabled={!canAddFiles}
+                disabledTitle="Se alcanzó el máximo de archivos."
+              />
+              <p className={styles.filesHint}>
+                {assignmentFilesHint}
+                {` (${assignmentFiles.length + pendingFilesCount} de ${assignmentFilesLimits.maxPerAssignment})`}
+              </p>
+              {fileErrors.length > 0 && (
+                <ul className={styles.filesErrors} role="alert">
+                  {fileErrors.map((message) => <li key={message}>{message}</li>)}
+                </ul>
+              )}
+            </div>
             <FilesTable
               className={styles.filesTable}
               files={[
                 ...assignmentFiles.map((file) => ({
                   id: file,
                   name: file,
+                  type: /\.pdf$/i.test(file) ? 'application/pdf' : 'image',
                   link: `${serverHost}/${consts.imageRoute.assignment}/${file}`,
                   onDelete: addFileToRemove,
                 })),
@@ -395,7 +425,7 @@ function ActivityAssignmentDetailsPage() {
       <ErrorNotificationPopUp
         isOpen={isErrorOpen}
         close={closeError}
-        text={assignmentActionError?.message}
+        text={describeAssignmentUpdateError(assignmentActionError)}
       />
     </>
   );

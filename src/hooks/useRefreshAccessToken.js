@@ -29,7 +29,8 @@ function useRefreshAccessToken() {
     };
 
     const uri = `${serverHost}/session/accessToken`;
-    const response = await fetch(uri);
+    // La API vive en otro origen: sin 'include' la cookie httpOnly refreshToken no viaja.
+    const response = await fetch(uri, { credentials: 'include' });
     if (!response.ok) {
       // si el refreshToken no está autorizado, cerrar sesión
       if (response.status === 401 || response.status === 403) setAccessToken(null);
