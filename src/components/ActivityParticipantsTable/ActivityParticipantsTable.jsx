@@ -1,79 +1,61 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-// eslint-disable-next-line no-unused-vars
 import { Pagination } from '@mui/material';
 import { hasStudentIds, withStudentIdHeader } from '@helpers/studentIdColumn';
+import useActivityParticipants from '@hooks/useActivityParticipants';
+import RefreshButton from '@components/RefreshButton';
 import styles from './ActivityParticipantsTable.module.css';
 import Table from '../Table/Table';
-import useFetch from '../../hooks/useFetch';
-import useToken from '../../hooks/useToken';
-import { serverHost } from '../../config';
 import TableRow from '../TableRow/TableRow';
 import UserPicture from '../UserPicture/UserPicture';
 import UserNameLink from '../UserNameLink/UserNameLink';
 
+/**
+ * Participantes de una actividad, de solo lectura (para quien no la gestiona). Usa
+ * `useActivityParticipants`, igual que la tabla de gestión: su `refetch` recarga la página actual.
+ */
 function ActivityParticipantsTable({ idActivity }) {
   const {
-    callFetch: fetchAssignmets,
-    result: assignmentsResult,
-    loading: assignmetsLoading,
-    error: assignmentsError,
-  } = useFetch();
+    participants, total, pages, resultsPerPage, loading, error, page, setPage, refetch,
+  } = useActivityParticipants(idActivity);
 
-  const [mappedItems, setMappedItems] = useState([]);
-
-  const token = useToken();
+  const [paginationItems, setPaginationItems] = useState();
 
   useEffect(() => {
-    // obtener asignaciones al iniciar la tabla
-    fetchAssignmets({
-      uri: `${serverHost}/activity/${idActivity}/assignment`,
-      headers: { authorization: token },
-    });
+    // Menos páginas visibles en pantallas pequeñas.
+    const media = matchMedia('(max-width:700px)');
+    const handleMediaChange = (e) => setPaginationItems(e.matches ? 0 : 2);
+    media.onchange = handleMediaChange;
+    handleMediaChange(media);
   }, []);
 
-  useEffect(() => {
-    if (assignmentsResult) {
-      let newItems = [];
-      const oldItems = assignmentsResult;
-      newItems = oldItems.map((value) => {
-        const { user } = value;
-        return {
-          name: `${user.name} ${user.lastname}`,
-          id: `${user.id}`,
-          promotion: `${user.promotion}`,
-          hasImage: user.hasImage,
-          studentId: user.studentId,
-        };
-      });
-      setMappedItems(newItems);
-    }
-  }, [assignmentsResult]);
-
-  const showStudentId = hasStudentIds(mappedItems);
+  const users = participants.map((assignment) => assignment.user);
+  const showStudentId = hasStudentIds(users);
 
   return (
     <>
+      <div className={styles.toolbar}>
+        <p className={styles.counter}>
+          {`${total} ${total === 1 ? 'participante' : 'participantes'}`}
+        </p>
+        <RefreshButton onClick={refetch} loading={loading} />
+      </div>
+      {error && <p role="alert" className={styles.error}>{error.message}</p>}
       <Table
         header={withStudentIdHeader(['No.', '', 'Nombre', 'Promoción'], showStudentId)}
-        loading={assignmetsLoading}
+        loading={loading}
         breakPoint="1100px"
         showCheckbox={false}
-        showNoResults={assignmentsError !== undefined && assignmentsError !== null}
+        showNoResults={Boolean(error) || (!loading && users.length === 0)}
       >
-        {mappedItems?.map((user, index) => (
+        {users.map((user, index) => (
           <TableRow id={user.id} key={user.id}>
-            <td>
-              {index + 1}
-            </td>
+            <td>{resultsPerPage * page + index + 1}</td>
             <td className={styles.pictureRow}>
               <UserPicture name={user.name} idUser={user.id} hasImage={user.hasImage ?? false} />
             </td>
             <td className={styles.nameRow}>
-              <UserNameLink
-                idUser={user.id}
-                name={user.name}
-              />
+              <UserNameLink idUser={user.id} name={`${user.name} ${user.lastname}`} />
             </td>
             {showStudentId ? <td className={styles.promotionRow}>{user.studentId ?? '—'}</td> : []}
             <td className={styles.promotionRow}>{user.promotion}</td>
@@ -81,13 +63,13 @@ function ActivityParticipantsTable({ idActivity }) {
         ))}
       </Table>
 
-      {/*       <Pagination
-        count={users?.pages ?? 0}
+      <Pagination
+        count={pages}
         siblingCount={paginationItems}
         className={styles.pagination}
-        onChange={handlePageChange}
-        page={currentPage + 1}
-      /> */}
+        onChange={(e, newPage) => setPage(newPage - 1)}
+        page={page + 1}
+      />
     </>
   );
 }

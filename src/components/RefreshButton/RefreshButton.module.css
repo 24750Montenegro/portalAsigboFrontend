@@ -1,0 +1,14 @@
+.refreshButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon {
+  flex-shrink: 0;
+}
+
+.spinner {
+  /* El spinner mide 2em: con 8px queda del tamaño del icono. */
+  font-size: 8px;
+}

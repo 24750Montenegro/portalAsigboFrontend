@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Pagination } from '@mui/material';
 import {
-  FaUserPlus as AddUserIcon,
   FaUserTimes as RemoveUserIcon,
   FaClipboardList as ListIcon,
 } from 'react-icons/fa';
@@ -10,6 +9,10 @@ import { AiFillCheckCircle as CheckIcon, AiFillCloseCircle as RemoveIcon } from 
 
 import { useNavigate } from 'react-router-dom';
 import { hasStudentIds, withStudentIdHeader } from '@helpers/studentIdColumn';
+import useActivityParticipants from '@hooks/useActivityParticipants';
+import AddUsersPopUp from '@components/AddUsersPopUp';
+import Button from '@components/Button';
+import RefreshButton from '@components/RefreshButton';
 import styles from './SelectActivityParticipantsTable.module.css';
 import ActivityParticipantsTableFilter from '../ActivityParticipantsTableFilter/ActivityParticipantsTableFilter';
 import Table from '../Table/Table';
@@ -28,30 +31,44 @@ import usePopUp from '../../hooks/usePopUp';
 import useCount from '../../hooks/useCount';
 
 const actions = {
-  assign: 'asignar',
+  assignMany: 'asignar varios',
   unassign: 'desasignar',
   complete: 'completar',
   uncomplete: 'no completar',
 };
 
-const status = {
-  completed: 'Completado',
-  asigned: 'Asignado',
-  unassigned: 'No asignado',
+const successText = {
+  [actions.assignMany]: 'Los becados seleccionados han sido asignados de forma exitosa.',
+  [actions.unassign]: 'El usuario ha sido desasignado de forma exitosa.',
+  [actions.complete]: 'La asignación del usuario a esta actividad ha sido marcada como completada.',
+  [actions.uncomplete]: 'La asignación del usuario a esta actividad ha sido marcada como no completada.',
 };
-function ActivityParticipantsTable({ idActivity }) {
-  const {
-    callFetch: fetchAssignmets,
-    result: assignmentsResult,
-    error: assignmentsError,
-  } = useFetch();
 
+/** Estado real de una asignación (coincide con los valores del filtro de estado). */
+const statusLabel = (assignment) => (assignment.completed ? 'Completado' : 'Asignado');
+
+/** Horas de la asignación: las de la actividad más las adicionales (p. ej. las importadas). */
+const assignmentHours = (assignment) => (assignment.activity?.serviceHours ?? 0)
+  + (assignment.aditionalServiceHours ?? 0);
+
+/**
+ * Participantes de una actividad para quien la gestiona: solo los asignados, con su estado, y un
+ * botón aparte para agregar varios a la vez. Los datos vienen de `useActivityParticipants`, cuyo
+ * `refetch` recarga la página actual conservando filtros.
+ */
+function SelectActivityParticipantsTable({ idActivity }) {
   const {
-    callFetch: fetchUsers,
-    result: users,
-    error: usersError,
-    loading: loadingUsers,
-  } = useFetch();
+    participants,
+    total,
+    pages,
+    resultsPerPage,
+    loading,
+    error,
+    setFilters,
+    page,
+    setPage,
+    refetch,
+  } = useActivityParticipants(idActivity);
 
   const {
     callFetch: fetchAssignmentAction,
@@ -62,12 +79,7 @@ function ActivityParticipantsTable({ idActivity }) {
 
   const token = useToken();
 
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [assignedUsers, setAssignedUsers] = useState(null);
-  const [assignmentCompletedUsers, setAssignmentCompletedUsers] = useState(null);
-  const [userFilters, setUserFilters] = useState({});
   const [paginationItems, setPaginationItems] = useState();
-  const [currentPage, setCurrentPage] = useState(0);
   // Establece la acción para una asignación que se está realizando
   const [currentAction, setCurrentAction] = useState();
   // Usuario con el que se ejecuta la acción
@@ -76,6 +88,7 @@ function ActivityParticipantsTable({ idActivity }) {
   const [isConfirmationOpen, openConfirmation, closeConfirmation] = usePopUp();
   const [isSuccessOpen, openSuccess, closeSuccess] = usePopUp();
   const [isErrorOpen, openError, closeError] = usePopUp();
+  const [isAddOpen, openAdd, closeAdd] = usePopUp();
 
   /* Contador (utilizado como trigger) para resetear altura de tabla cuando el
   último menú desaparece */
@@ -85,69 +98,6 @@ function ActivityParticipantsTable({ idActivity }) {
   const [tableVerticalStyle, setTableVerticalStyle] = useState(false);
 
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // obtener asignaciones al iniciar la tabla
-    fetchAssignmets({
-      uri: `${serverHost}/activity/${idActivity}/assignment`,
-      headers: { authorization: token },
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!assignmentsResult) return;
-    // Clasificar usuarios dependiendo de estado de asignación
-    const assignedUsersToAdd = [];
-    const assignmentCompletedUsersToAdd = [];
-
-    assignmentsResult?.forEach((assignment) => {
-      // se guarda el user dto
-      if (assignment.completed) assignmentCompletedUsersToAdd.push(assignment.user);
-      else assignedUsersToAdd.push(assignment.user);
-    });
-
-    setAssignedUsers(assignedUsersToAdd);
-    setAssignmentCompletedUsers(assignmentCompletedUsersToAdd);
-  }, [assignmentsResult]);
-
-  useEffect(() => {
-    // Si ocurrió un error al obtener asignaciones, colocar arrays vacios
-    if (!assignmentsError) return;
-    setAssignedUsers([]);
-    setAssignmentCompletedUsers([]);
-  }, [assignmentsError]);
-
-  useEffect(() => {
-    if (!assignedUsers || !assignmentCompletedUsers) return;
-
-    if (userFilters.status === '1' || userFilters.status === '2' || userFilters.status === '3') { return; } // Búsqueda local
-
-    // Realizar búsqueda de usuarios
-    const searchParams = new URLSearchParams({});
-
-    // añadir prioridad a usuarios completados y asignados
-    assignmentCompletedUsers.forEach((user) => searchParams.append('priority', user.id));
-    assignedUsers.forEach((user) => searchParams.append('priority', user.id));
-
-    // incluir usuarios boqueados
-    searchParams.append('includeBlocked', true);
-
-    // Filtros de búsqueda
-    const { promotion, search } = userFilters;
-    if (promotion) searchParams.append('promotion', promotion);
-    if (search) searchParams.append('search', search);
-
-    // Agregar paginación
-    searchParams.append('page', currentPage);
-
-    const uri = `${serverHost}/user?${searchParams.toString()}`;
-    fetchUsers({ uri, headers: { authorization: token } });
-  }, [assignedUsers, assignmentCompletedUsers, userFilters, currentPage]);
-
-  useEffect(() => {
-    // Desactiviar loading inicial al obtener listado completo de usuarios (o error)
-    if (users || usersError) setInitialLoading(false);
-  }, [users, usersError]);
 
   useEffect(() => {
     // cambiar número en la paginación
@@ -164,73 +114,20 @@ function ActivityParticipantsTable({ idActivity }) {
   }, []);
 
   useEffect(() => {
-    // resetear num pagina
-    setCurrentPage(0);
-  }, [userFilters]);
-
-  useEffect(() => {
-    if (assignmentActionResult) openSuccess(); // Se culminó exitosamente una acción
+    if (!assignmentActionResult) return;
+    // Se culminó exitosamente una acción: recargar la página actual con los mismos filtros.
+    if (currentAction === actions.assignMany) closeAdd();
+    refetch();
+    openSuccess();
   }, [assignmentActionResult]);
 
   useEffect(() => {
     if (assignmentActionError) openError(); // Ocurrió un error con una acción
   }, [assignmentActionError]);
 
-  const getAssignmentStatus = (idUser) => {
-    if (assignmentCompletedUsers.some((user) => user.id === idUser)) return status.completed;
-    if (assignedUsers.some((user) => user.id === idUser)) return status.asigned;
-    return status.unassigned;
-  };
-
-  const handleUserFilterChange = (val) => setUserFilters(val);
-
-  const handlePageChange = (e, page) => {
-    setCurrentPage(page - 1);
-  };
-
-  const filterUsersByState = () => {
-    let selectedUsers;
-
-    if (userFilters.status === '1') selectedUsers = [...assignmentCompletedUsers, ...assignedUsers];
-    else if (userFilters.status === '2') selectedUsers = assignedUsers;
-    else if (userFilters.status === '3') selectedUsers = assignmentCompletedUsers;
-    else return null;
-    return selectedUsers.filter((user) => {
-      if (userFilters.search?.trim() !== '') {
-        // filtrar por nombre
-        const searchRegex = new RegExp(userFilters.search, 'gi');
-        if (!`${user.name} ${user.lastname}`.match(searchRegex)) {
-          return false;
-        }
-      }
-
-      // filtrar por promocion
-      if (
-        userFilters.promotion?.trim()?.length > 0
-        && user.promotion !== parseInt(userFilters.promotion, 10)
-        && user.promotionGroup !== userFilters.promotion
-      ) {
-        return false;
-      }
-
-      return true;
-    });
-  };
-
-  const assignClickController = (user) => {
-    // Se presionó acción de asignar usuario
-    setCurrentAction(actions.assign);
-    setCurrentUser(user);
-    fetchAssignmentAction({
-      uri: `${serverHost}/activity/${idActivity}/assignment/${user.id}`,
-      method: 'POST',
-      headers: { authorization: token },
-      parse: false,
-    });
-  };
+  const handlePageChange = (e, newPage) => setPage(newPage - 1);
 
   const completeClickController = (user) => {
-    // Se presionó acción de completar asignación
     setCurrentAction(actions.complete);
     setCurrentUser(user);
     fetchAssignmentAction({
@@ -242,37 +139,30 @@ function ActivityParticipantsTable({ idActivity }) {
     });
   };
 
+  // Desasignar y «no completar» piden confirmación; el fetch va en el callback del popUp.
   const unassignClickController = (user) => {
-    // Se seleccionó la acción de desasignar usuario
-    // Primero se debe pedir confirmación. El fetch de esta acción se realiza en el callback
-    // del popUp de confirmación
     setCurrentAction(actions.unassign);
-    openConfirmation();
     setCurrentUser(user);
+    openConfirmation();
   };
   const uncompleteClickController = (user) => {
-    // Se seleccionó la acción de no completar asignación usuario
-    // Primero se debe pedir confirmación. El fetch de esta acción se realiza en el callback
-    // del popUp de confirmación
     setCurrentAction(actions.uncomplete);
-    openConfirmation();
     setCurrentUser(user);
+    openConfirmation();
   };
 
   const handleConfirmationChange = (value) => {
     if (!value || !currentUser) return;
 
     const request = {
+      uri: `${serverHost}/activity/${idActivity}/assignment/${currentUser.id}`,
       headers: { authorization: token },
       parse: false,
     };
 
-    // Ejecutar acción correspondiente
     if (currentAction === actions.unassign) {
-      request.uri = `${serverHost}/activity/${idActivity}/assignment/${currentUser.id}`;
       request.method = 'DELETE';
     } else if (currentAction === actions.uncomplete) {
-      request.uri = `${serverHost}/activity/${idActivity}/assignment/${currentUser.id}`;
       request.method = 'PATCH';
       request.body = JSON.stringify({ completed: false });
     } else return;
@@ -280,29 +170,15 @@ function ActivityParticipantsTable({ idActivity }) {
     fetchAssignmentAction(request);
   };
 
-  const addUserToArrayOnce = (array) => {
-    if (array.some((user) => user.id === currentUser.id)) return array;
-    return [...array, currentUser];
-  };
-
-  const removeUserFromArray = (array) => array.filter((user) => user.id !== currentUser.id);
-
-  const handleFinishAction = async () => {
-    // Modificar arreglos de usuarios según su estado
-    if (currentAction === actions.assign) {
-      // agregar current user a usuarios asignados si no está aún
-      setAssignedUsers(addUserToArrayOnce);
-    } else if (currentAction === actions.unassign) {
-      // retirar current user de usuarios asignados
-      setAssignedUsers(removeUserFromArray);
-    } else if (currentAction === actions.complete) {
-      // agregar current user a usuarios completados si no está aún
-      setAssignmentCompletedUsers(addUserToArrayOnce);
-      setAssignedUsers(removeUserFromArray); // Retirarlo de usuarios asignados
-    } else if (currentAction === actions.uncomplete) {
-      setAssignmentCompletedUsers(removeUserFromArray); // Retirarlo de usuarios completados
-      setAssignedUsers(addUserToArrayOnce); // Agregarlo a inscritos si no está aún
-    }
+  const handleAddParticipants = (idUsers) => {
+    setCurrentAction(actions.assignMany);
+    fetchAssignmentAction({
+      uri: `${serverHost}/activity/${idActivity}/assignment/bulk`,
+      method: 'POST',
+      headers: { authorization: token },
+      parse: false,
+      body: JSON.stringify({ idUsers }),
+    });
   };
 
   /**
@@ -315,30 +191,55 @@ function ActivityParticipantsTable({ idActivity }) {
 
   const handleTableStyleChange = (isVertical) => setTableVerticalStyle(isVertical);
 
-  const usersToShow = !userFilters.status || userFilters.status === '' // Si posee filtro de estado, filtrar datos locales
-    ? users?.result
-    : filterUsersByState();
+  const rowOptions = (assignment) => {
+    const { user } = assignment;
+    const details = {
+      icon: <ListIcon />,
+      text: 'Ver detalles',
+      onClick: () => navigate(`/actividad/${idActivity}/asignacion/${user.id}`),
+    };
+    if (assignment.completed) {
+      return [details, { icon: <RemoveIcon />, text: 'No completar', onClick: () => uncompleteClickController(user) }];
+    }
+    return [
+      details,
+      { icon: <CheckIcon />, text: 'Completar', onClick: () => completeClickController(user) },
+      { icon: <RemoveUserIcon />, text: 'Desasignar', onClick: () => unassignClickController(user) },
+    ];
+  };
 
-  const showStudentId = hasStudentIds(usersToShow);
+  const showStudentId = hasStudentIds(participants.map((assignment) => assignment.user));
 
   return (
     <>
-      <ActivityParticipantsTableFilter onChange={handleUserFilterChange} />
+      <div className={styles.toolbar}>
+        <p className={styles.counter}>
+          {`${total} ${total === 1 ? 'participante' : 'participantes'}`}
+        </p>
+        <div className={styles.toolbarActions}>
+          <RefreshButton onClick={refetch} loading={loading} />
+          <Button text="Agregar participantes" onClick={openAdd} />
+        </div>
+      </div>
+
+      {error && <p role="alert" className={styles.error}>{error.message}</p>}
+
+      <ActivityParticipantsTableFilter onChange={setFilters} />
 
       <Table
-        header={withStudentIdHeader(['No.', '', 'Nombre', 'Promoción', 'Estado', ''], showStudentId)}
-        loading={(initialLoading || loadingUsers)}
-        showNoResults={usersError !== undefined && usersError !== null}
+        header={withStudentIdHeader(['No.', '', 'Nombre', 'Promoción', 'Estado', 'Horas', ''], showStudentId)}
+        loading={loading}
+        showNoResults={Boolean(error) || (!loading && participants.length === 0)}
         resetTableHeight={resetTableHeightTrigger}
         breakPoint="1100px"
         onTableStyleChange={handleTableStyleChange}
         showCheckbox={false}
       >
-        {usersToShow?.map((user, index) => {
-          const currentStatus = getAssignmentStatus(user.id);
+        {participants.map((assignment, index) => {
+          const { user } = assignment;
           return (
             <TableRow id={user.id} key={user.id}>
-              <td>{(users ? users.resultsPerPage * currentPage : 0) + index + 1}</td>
+              <td>{resultsPerPage * page + index + 1}</td>
               <td className={styles.pictureRow}>
                 <UserPicture name={user.name} idUser={user.id} hasImage={user.hasImage ?? false} />
               </td>
@@ -347,58 +248,18 @@ function ActivityParticipantsTable({ idActivity }) {
               </td>
               {showStudentId ? <td className={styles.promotionRow}>{user.studentId ?? '—'}</td> : []}
               <td className={styles.promotionRow}>{user.promotion}</td>
-              <td className={styles.statusRow}>{currentStatus}</td>
+              <td className={styles.statusRow}>{statusLabel(assignment)}</td>
+              <td className={styles.hoursRow}>{assignmentHours(assignment)}</td>
               <td className={styles.buttonRow}>
                 <OptionsButton
                   onMenuVisibleChange={handleActionMenuVisibilityChange}
                   showMenuAtTop={
                     // En estilo vertical siempre se muestra arriba
                     // O las últimas 2 filas cuando hay al menos 3 en total
-                    tableVerticalStyle || (index > usersToShow.length - 3 && index >= 2)
+                    tableVerticalStyle || (index > participants.length - 3 && index >= 2)
                   }
                   className={styles.optionsButton}
-                  options={(() => {
-                    if (currentStatus === status.completed) {
-                      return [
-                        {
-                          icon: <ListIcon />,
-                          text: 'Ver detalles',
-                          onClick: () => navigate(`/actividad/${idActivity}/asignacion/${user.id}`),
-                        },
-                        {
-                          icon: <RemoveIcon />,
-                          text: 'No completar',
-                          onClick: () => uncompleteClickController(user),
-                        },
-                      ];
-                    }
-                    if (currentStatus === status.asigned) {
-                      return [
-                        {
-                          icon: <ListIcon />,
-                          text: 'Ver detalles',
-                          onClick: () => navigate(`/actividad/${idActivity}/asignacion/${user.id}`),
-                        },
-                        {
-                          icon: <CheckIcon />,
-                          text: 'Completar',
-                          onClick: () => completeClickController(user),
-                        },
-                        {
-                          icon: <RemoveUserIcon />,
-                          text: 'Desasignar',
-                          onClick: () => unassignClickController(user),
-                        },
-                      ];
-                    }
-                    return [
-                      {
-                        icon: <AddUserIcon />,
-                        text: 'Asignar',
-                        onClick: () => assignClickController(user),
-                      },
-                    ];
-                  })()}
+                  options={rowOptions(assignment)}
                 />
               </td>
             </TableRow>
@@ -406,17 +267,25 @@ function ActivityParticipantsTable({ idActivity }) {
         })}
       </Table>
 
-      {(!userFilters.status || userFilters.status === '') && (
-        <Pagination
-          count={users?.pages ?? 0}
-          siblingCount={paginationItems}
-          className={styles.pagination}
-          onChange={handlePageChange}
-          page={currentPage + 1}
-        />
-      )}
+      <Pagination
+        count={pages}
+        siblingCount={paginationItems}
+        className={styles.pagination}
+        onChange={handlePageChange}
+        page={page + 1}
+      />
 
-      {assignmentActionLoading && <LoadingView />}
+      {assignmentActionLoading && currentAction !== actions.assignMany && <LoadingView />}
+
+      <AddUsersPopUp
+        isOpen={isAddOpen}
+        close={closeAdd}
+        title="Agregar participantes"
+        actionText="Asignar"
+        extraParams={{ excludeAssignedTo: idActivity }}
+        onConfirm={handleAddParticipants}
+        loading={assignmentActionLoading && currentAction === actions.assignMany}
+      />
 
       <ConfirmationPopUp
         close={closeConfirmation}
@@ -432,22 +301,7 @@ function ActivityParticipantsTable({ idActivity }) {
       <SuccessNotificationPopUp
         isOpen={isSuccessOpen}
         close={closeSuccess}
-        text={(() => {
-          if (currentAction === actions.assign) {
-            return 'El usuario ha sido asignado de forma exitosa.';
-          }
-          if (currentAction === actions.unassign) {
-            return 'El usuario ha sido desasignado de forma exitosa.';
-          }
-          if (currentAction === actions.complete) {
-            return 'La asignación del usuario a esta actividad ha sido marcada como completada.';
-          }
-          if (currentAction === actions.uncomplete) {
-            return 'La asignación del usuario a esta actividad ha sido marcada como no completada.';
-          }
-          return 'Operación exitosa.';
-        })()}
-        callback={handleFinishAction}
+        text={successText[currentAction] ?? 'Operación exitosa.'}
       />
       <ErrorNotificationPopUp
         isOpen={isErrorOpen}
@@ -458,10 +312,10 @@ function ActivityParticipantsTable({ idActivity }) {
   );
 }
 
-export default ActivityParticipantsTable;
+export default SelectActivityParticipantsTable;
 
-ActivityParticipantsTable.propTypes = {
+SelectActivityParticipantsTable.propTypes = {
   idActivity: PropTypes.string.isRequired,
 };
 
-ActivityParticipantsTable.defaultProps = {};
+SelectActivityParticipantsTable.defaultProps = {};
