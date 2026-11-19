@@ -10,6 +10,22 @@ import EnrolledIcon from '../../assets/icons/EnrolledIcon';
 import consts from '../../helpers/consts';
 import randomString from '../../helpers/randomString';
 
+const hoursLabel = (hours) => `${hours} ${hours === 1 ? 'hora' : 'horas'}`;
+
+/**
+ * Horas efectivas del becado en la actividad (base + ajuste, nunca menos de 0) y el desglose
+ * cuando hay ajuste. El ajuste es negativo cuando se le registraron menos horas que las base
+ * (p. ej. por CSV).
+ */
+const serviceHoursText = (baseHours, adjustment = 0) => {
+  if (!adjustment) return hoursLabel(baseHours);
+  const total = hoursLabel(Math.max(0, baseHours + adjustment));
+  if (adjustment > 0) {
+    return `${total} (${baseHours} base + ${adjustment} ${adjustment > 1 ? 'adicionales' : 'adicional'})`;
+  }
+  return `${total} (${baseHours} base − ${-adjustment} de ajuste)`;
+};
+
 function ActivityDetails({ className, data }) {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -63,16 +79,7 @@ function ActivityDetails({ className, data }) {
           {data ? dayjs(data.date).format('DD/MM/YYYY') : ''}
         </DataField>
         <DataField label="Horas de servicio" className={styles.dataField}>
-          {data
-            ? data?.serviceHours !== 1
-              ? `${data?.serviceHours} horas`
-              : `${data?.serviceHours} hora`
-            : ''}
-          {data?.userAssignment?.aditionalServiceHours > 0
-            ? ` (+ ${data?.userAssignment?.aditionalServiceHours} ${
-              data?.userAssignment?.aditionalServiceHours > 1 ? 'adicionales' : 'adicional'
-            })`
-            : ''}
+          {data ? serviceHoursText(data.serviceHours, data.userAssignment?.aditionalServiceHours) : ''}
         </DataField>
 
         <DataField label="Pago requerido" className={styles.dataField}>
