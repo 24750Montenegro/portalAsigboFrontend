@@ -3,7 +3,7 @@ const labels = {
   carnet_invalido: 'Carné inválido (debe tener de 4 a 10 dígitos)',
   actividad_invalida: 'Nombre de actividad vacío o de más de 100 caracteres',
   eje_invalido: 'El eje está vacío',
-  fecha_invalida: 'Fecha inválida (use AAAA-MM-DD HH:mm, hora de Guatemala)',
+  fecha_invalida: 'Fecha inválida (use AAAA-MM-DD HH:mm, AAAA-MM-DD, DD/MM/AAAA HH:mm o DD/MM/AAAA, hora de Guatemala; la hora también puede ir como HH:mm:ss)',
   horas_invalidas: 'Horas inválidas (un número entero de 1 a 200)',
   fila_repetida: 'Fila repetida: el mismo becado y actividad ya aparecen antes',
   horas_distintas: 'El mismo becado aparece con horas distintas en esta actividad',

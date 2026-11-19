@@ -125,6 +125,41 @@
   color: #1b6e2c;
 }
 
+.scrollable {
+  max-height: 420px;
+  margin-bottom: 8px;
+}
+
+.errorRow td {
+  color: #b00020;
+}
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.block {
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.block.warning {
+  border-color: #e0b54a;
+  background-color: #fff8e6;
+}
+
+.list {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.6;
+}
+
 @media only screen and (max-width: 600px) {
   .summary {
     grid-template-columns: repeat(2, 1fr);
