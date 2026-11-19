@@ -11,7 +11,8 @@ import { serverHost } from '@/config';
 import useCount from '@hooks/useCount';
 import UserNameLink from '@components/UserNameLink';
 import UserPicture from '@components/UserPicture';
-import { hasStudentIds, withStudentIdHeader } from '@helpers/studentIdColumn';
+import { withStudentIdHeader } from '@helpers/studentIdColumn';
+import useShowStudentIdColumn from '@hooks/useShowStudentIdColumn';
 import styles from './UserSelectTable.module.css';
 
 /**
@@ -163,7 +164,7 @@ function UserSelectTable({ defaultSelectedUsers, onChange, extraParams }) {
     if (onChange) onChange(selectedUsers.map((user) => user.id));
   }, [selectedUsers]);
 
-  const showStudentId = hasStudentIds(users?.result);
+  const showStudentId = useShowStudentIdColumn(users?.result);
 
   return (
     <>
