@@ -58,7 +58,11 @@ beforeEach(() => {
   URL.createObjectURL = vi.fn(() => 'blob:preview');
   // jsdom no implementa matchMedia; Table/BackTitle lo usan para el breakpoint.
   vi.stubGlobal('matchMedia', vi.fn(() => ({
-    matches: false, addListener: vi.fn(), removeListener: vi.fn(), addEventListener: vi.fn(), removeEventListener: vi.fn(),
+    matches: false,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
   })));
   vi.stubGlobal('fetch', vi.fn(async (uri, options = {}) => {
     if (options.method === 'PATCH') {

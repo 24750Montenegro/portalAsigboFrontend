@@ -48,6 +48,15 @@ describe('SelectActivityParticipantsTable', () => {
   beforeEach(() => stubMatchMedia());
   afterEach(() => vi.unstubAllGlobals());
 
+  it('un admin ve la columna Carné aunque ningún participante tenga carné', async () => {
+    api();
+
+    renderWithApp(<SelectActivityParticipantsTable idActivity="act1" />);
+
+    expect(await screen.findByText('Ana Pérez')).toBeInTheDocument();
+    expect(screen.getAllByText('Carné').length).toBeGreaterThan(0);
+  });
+
   it('muestra solo a los asignados, con su estado y el total', async () => {
     const fetchMock = api();
 
@@ -140,7 +149,10 @@ describe('SelectActivityParticipantsTable', () => {
       }],
     };
 
-    /** Responde `beforeImport` hasta que se llame a `importDone()`; luego `afterImport` o `reply()`. */
+    /**
+     * Responde `beforeImport` hasta que se llame a `importDone()`; luego `afterImport` o
+     * `reply()`.
+     */
     const refreshApi = ({ reply } = {}) => {
       let imported = false;
       const fetchMock = mockFetch((url) => {

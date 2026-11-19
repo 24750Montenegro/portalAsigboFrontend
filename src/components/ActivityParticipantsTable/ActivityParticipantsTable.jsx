@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Pagination } from '@mui/material';
-import { hasStudentIds, withStudentIdHeader } from '@helpers/studentIdColumn';
+import { withStudentIdHeader } from '@helpers/studentIdColumn';
+import useShowStudentIdColumn from '@hooks/useShowStudentIdColumn';
 import useActivityParticipants from '@hooks/useActivityParticipants';
 import RefreshButton from '@components/RefreshButton';
 import styles from './ActivityParticipantsTable.module.css';
@@ -30,7 +31,7 @@ function ActivityParticipantsTable({ idActivity }) {
   }, []);
 
   const users = participants.map((assignment) => assignment.user);
-  const showStudentId = hasStudentIds(users);
+  const showStudentId = useShowStudentIdColumn(users);
 
   return (
     <>

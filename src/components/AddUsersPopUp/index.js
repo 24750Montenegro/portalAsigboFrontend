@@ -1,1 +1,3 @@
-export { default } from './AddUsersPopUp';
+import AddUsersPopUp from './AddUsersPopUp';
+
+export default AddUsersPopUp;

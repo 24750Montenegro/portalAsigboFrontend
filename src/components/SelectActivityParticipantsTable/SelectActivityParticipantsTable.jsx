@@ -8,7 +8,8 @@ import {
 import { AiFillCheckCircle as CheckIcon, AiFillCloseCircle as RemoveIcon } from 'react-icons/ai';
 
 import { useNavigate } from 'react-router-dom';
-import { hasStudentIds, withStudentIdHeader } from '@helpers/studentIdColumn';
+import { withStudentIdHeader } from '@helpers/studentIdColumn';
+import useShowStudentIdColumn from '@hooks/useShowStudentIdColumn';
 import useActivityParticipants from '@hooks/useActivityParticipants';
 import AddUsersPopUp from '@components/AddUsersPopUp';
 import Button from '@components/Button';
@@ -208,7 +209,7 @@ function SelectActivityParticipantsTable({ idActivity }) {
     ];
   };
 
-  const showStudentId = hasStudentIds(participants.map((assignment) => assignment.user));
+  const showStudentId = useShowStudentIdColumn(participants.map((assignment) => assignment.user));
 
   return (
     <>
