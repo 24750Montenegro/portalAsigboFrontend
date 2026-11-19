@@ -7,7 +7,7 @@ export default defineConfig((env) => mergeConfig(viteConfig(env), {
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.js'],
-    include: ['src/**/*.test.{js,jsx}'],
+    include: ['src/**/*.test.{js,jsx}', 'build/**/*.test.js'],
     css: false,
   },
 }));

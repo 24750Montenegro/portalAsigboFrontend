@@ -57,7 +57,8 @@ function SessionProvider({ children }) {
 
     (async () => {
       try {
-        const res = await fetch(uri);
+        // La API vive en otro origen: sin 'include' la cookie httpOnly refreshToken no viaja.
+        const res = await fetch(uri, { credentials: 'include' });
         if (!res.ok) throw res;
         const { accessToken: receivedAccessToken } = await res.json();
         setAccessToken(receivedAccessToken);
