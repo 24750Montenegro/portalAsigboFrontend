@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 // import PropTypes from 'prop-types';
 import { useParams, useNavigate } from 'react-router-dom';
-import dayjs from 'dayjs';
 import { AiFillCheckCircle as CheckIcon, AiFillCloseCircle as RemoveIcon } from 'react-icons/ai';
 import { FaUserTimes as RemoveUserIcon } from 'react-icons/fa';
 import styles from './ActivityAssignmentDetailsPage.module.css';
@@ -24,10 +23,11 @@ import SuccessNotificationPopUp from '../../components/SuccessNotificationPopUp/
 import ErrorNotificationPopUp from '../../components/ErrorNotificationPopUp/ErrorNotificationPopUp';
 import TextArea from '../../components/TextArea/TextArea';
 import InputFile from '../../components/InputFile/InputFile';
-import FilesTable from '../../components/FilesTable/FilesTable';
+import CheckBox from '../../components/CheckBox';
+import AssignmentSummary from '../../components/AssignmentSummary';
+import AssignmentFiles from '../../components/AssignmentFiles';
 import randomString from '../../helpers/randomString';
 import useToken from '../../hooks/useToken';
-import consts from '../../helpers/consts';
 import {
   assignmentFilesAccept,
   assignmentFilesHint,
@@ -75,6 +75,8 @@ function ActivityAssignmentDetailsPage() {
 
   const [currentAction, setCurrentAction] = useState();
   const [assignmentStatus, setAssignmentStatus] = useState(null);
+  const [savedAditionalHours, setSavedAditionalHours] = useState(0);
+  const [notesVisibleToUser, setNotesVisibleToUser] = useState(false);
   const [assignmentFiles, setAssignmentFiles] = useState([]);
   const [filesToUpload, setFilesToUpload] = useState({});
   const [filesToRemove, setFilesToRemove] = useState([]);
@@ -99,6 +101,8 @@ function ActivityAssignmentDetailsPage() {
     // Cargar datos de la asignación
     setData('aditionalServiceHours', assignmentData.aditionalServiceHours);
     setData('notes', assignmentData.notes);
+    setSavedAditionalHours(assignmentData.aditionalServiceHours ?? 0);
+    setNotesVisibleToUser(assignmentData.notesVisibleToUser ?? false);
     setAssignmentFiles(assignmentData.files ?? []);
 
     setAssignmentStatus(
@@ -116,6 +120,9 @@ function ActivityAssignmentDetailsPage() {
     setFilesToUpload({}); // Limpiar archivos nuevos
     setFilesToRemove([]); // Limpiar archivos a eliminar
     setFileErrors([]);
+    if (currentAction === actions.updateAssignmentData) {
+      setSavedAditionalHours(Number(form.aditionalServiceHours) || 0);
+    }
     if (Array.isArray(filesSaved)) {
       setAssignmentFiles((lastVal) => [...lastVal, ...filesSaved]);
     }
@@ -160,6 +167,7 @@ function ActivityAssignmentDetailsPage() {
     const data = new FormData();
     data.append('aditionalServiceHours', form.aditionalServiceHours);
     if (form.notes !== undefined && form.notes !== null) data.append('notes', form.notes);
+    data.append('notesVisibleToUser', notesVisibleToUser);
     Object.values(filesToUpload).forEach((file) => data.append('files', file, file.name));
     filesToRemove.forEach((file) => data.append('filesToRemove[]', file));
 
@@ -294,23 +302,12 @@ function ActivityAssignmentDetailsPage() {
             <DataField label="Promoción">{assignmentData.user.promotion}</DataField>
           </div>
 
-          <h3 className={styles.sectionTitle}>Datos de la actividad</h3>
-
-          <div className={styles.dataContainer}>
-            <DataField label="Nombre de la actividad">{assignmentData.activity.name}</DataField>
-
-            <DataField label="Eje de ASIGBO">{assignmentData.activity.asigboArea.name}</DataField>
-
-            <DataField label="Fecha de realización">
-              {dayjs(assignmentData.activity.date).format('DD/MM/YYYY')}
-            </DataField>
-
-            <DataField label="Horas de servicio">
-              {`${assignmentData.activity.serviceHours} ${
-                assignmentData.activity.serviceHours === 1 ? 'hora' : 'horas'
-              }`}
-            </DataField>
-          </div>
+          <AssignmentSummary
+            activityId={activityId}
+            activity={assignmentData.activity}
+            completed={assignmentStatus === status.completed}
+            aditionalServiceHours={savedAditionalHours}
+          />
 
           <p className={styles.instructions}>
             Las horas
@@ -318,7 +315,8 @@ function ActivityAssignmentDetailsPage() {
             usuario en cuestión.
             <br />
             <br />
-            Las notas y archivos adjuntos no son campos obligatorios.
+            Las notas y archivos adjuntos no son campos obligatorios. El becado ve los archivos
+            adjuntos; las notas solo si se marca «Mostrar notas al becado».
           </p>
 
           <div className={styles.formContainer}>
@@ -341,6 +339,14 @@ function ActivityAssignmentDetailsPage() {
               value={form?.notes}
             />
 
+            <div className={styles.notesVisibility}>
+              <CheckBox
+                label="Mostrar notas al becado"
+                checked={notesVisibleToUser}
+                onChange={(e) => setNotesVisibleToUser(e.target.checked)}
+              />
+            </div>
+
             <div className={styles.filesInputContainer}>
               <InputFile
                 className={styles.inputFile}
@@ -359,24 +365,18 @@ function ActivityAssignmentDetailsPage() {
                 </ul>
               )}
             </div>
-            <FilesTable
+            <AssignmentFiles
               className={styles.filesTable}
-              files={[
-                ...assignmentFiles.map((file) => ({
-                  id: file,
-                  name: file,
-                  type: /\.pdf$/i.test(file) ? 'application/pdf' : 'image',
-                  link: `${serverHost}/${consts.imageRoute.assignment}/${file}`,
-                  onDelete: addFileToRemove,
-                })),
-                ...Object.entries(filesToUpload).map(([id, file]) => ({
-                  id,
-                  name: file.name,
-                  type: file.type,
-                  link: URL.createObjectURL(file),
-                  onDelete: removeNewFile,
-                })),
-              ]}
+              files={assignmentFiles}
+              onDelete={addFileToRemove}
+              emptyText="Aún no hay archivos adjuntos."
+              pendingFiles={Object.entries(filesToUpload).map(([id, file]) => ({
+                id,
+                name: file.name,
+                type: file.type,
+                link: URL.createObjectURL(file),
+                onDelete: removeNewFile,
+              }))}
             />
 
             <Button

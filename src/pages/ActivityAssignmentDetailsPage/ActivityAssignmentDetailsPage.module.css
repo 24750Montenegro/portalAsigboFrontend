@@ -70,7 +70,8 @@
   padding-left: 20px;
 }
 
-.notesTextarea{
+.notesTextarea,
+.notesVisibility{
   grid-column: 1/-1;
 }
 

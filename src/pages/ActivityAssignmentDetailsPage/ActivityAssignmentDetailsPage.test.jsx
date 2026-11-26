@@ -77,12 +77,75 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+describe('ActivityAssignmentDetailsPage — resumen y notas', () => {
+  const fieldValue = (label) => screen.getByText(label).nextSibling;
+
+  it('muestra estado y horas como las ve el becado', async () => {
+    vi.mocked(fetch).mockImplementation(async () => jsonResponse({
+      ...assignment, aditionalServiceHours: 2,
+    }));
+    renderPage();
+    await screen.findByText('111-foto.png');
+
+    expect(fieldValue('Estado de la asignación')).toHaveTextContent('Asignado');
+    expect(fieldValue('Horas de la actividad')).toHaveTextContent('4 horas');
+    expect(fieldValue('Horas adicionales')).toHaveTextContent('+2 horas');
+    expect(fieldValue('Total asignado')).toHaveTextContent('6 horas');
+  });
+
+  it('los archivos guardados tienen vista previa y descarga además de eliminar', async () => {
+    renderPage();
+    await screen.findByText('111-foto.png');
+
+    const row = rowFor('111-foto.png');
+    expect(within(row).getByRole('button', { name: 'Ver 111-foto.png' })).toBeInTheDocument();
+    expect(within(row).getByRole('button', { name: 'Descargar 111-foto.png' })).toBeInTheDocument();
+    expect(within(row).getByRole('button', { name: 'Eliminar' })).toBeInTheDocument();
+  });
+
+  it('"Mostrar notas al becado" está desactivado por defecto y se envía en false', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText('111-foto.png');
+
+    expect(screen.getByRole('checkbox', { name: 'Mostrar notas al becado' })).not.toBeChecked();
+
+    await user.click(screen.getByRole('button', { name: 'Aplicar cambios' }));
+
+    await waitFor(() => expect(patchBodies).toHaveLength(1));
+    expect(patchBodies[0].get('notesVisibleToUser')).toBe('false');
+  });
+
+  it('al activarlo envía las notas como visibles para el becado', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText('111-foto.png');
+
+    await user.click(screen.getByRole('checkbox', { name: 'Mostrar notas al becado' }));
+    await user.click(screen.getByRole('button', { name: 'Aplicar cambios' }));
+
+    await waitFor(() => expect(patchBodies).toHaveLength(1));
+    expect(patchBodies[0].get('notesVisibleToUser')).toBe('true');
+  });
+
+  it('refleja la visibilidad guardada de las notas', async () => {
+    vi.mocked(fetch).mockImplementation(async () => jsonResponse({
+      ...assignment, notesVisibleToUser: true,
+    }));
+    renderPage();
+    await screen.findByText('111-foto.png');
+
+    expect(screen.getByRole('checkbox', { name: 'Mostrar notas al becado' })).toBeChecked();
+  });
+});
+
 describe('ActivityAssignmentDetailsPage — archivos', () => {
   it('muestra los límites de tipo, tamaño y cantidad', async () => {
     renderPage();
 
     expect(await screen.findByText(/Imágenes \(JPEG, PNG, WEBP\) o PDF/)).toBeInTheDocument();
     expect(screen.getByText(/máximo 3 MB por archivo, 5 por subida y 10 por asignación/i)).toBeInTheDocument();
+    await screen.findByText('111-foto.png');
   });
 
   it('lista los archivos existentes junto con los nuevos y "Eliminar" en uno nuevo quita solo ese', async () => {
