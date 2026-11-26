@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { formatGuatemalaDateTime } from '@helpers/hoursImportPreview';
 import styles from './ImportHoursPanel.module.css';
 
-/** Las actividades que la carga va a crear, para revisar que no sean un duplicado por un error de digitación. */
+/** Actividades que se crearán, para revisar posibles duplicados por errores de digitación. */
 function ActivitiesToCreate({ activities }) {
   if (activities.length === 0) return null;
   return (

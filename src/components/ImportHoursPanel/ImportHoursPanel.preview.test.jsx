@@ -96,7 +96,9 @@ describe('ImportHoursPanel — vista previa fila por fila', () => {
   });
 
   it('pagina la tabla de 50 en 50', async () => {
-    const rows = Array.from({ length: 120 }, (_, i) => row({ row: i + 2, carnet: String(30000 + i) }));
+    const rows = Array.from({ length: 120 }, (_, i) => (
+      row({ row: i + 2, carnet: String(30000 + i) })
+    ));
     mockFetches({ preview: { ...basePreview, rows } });
 
     renderPanel();
@@ -159,12 +161,15 @@ describe('ImportHoursPanel — avisos de posible duplicado', () => {
 
     const confirm = screen.getByRole('button', { name: /confirmar y guardar horas/i });
     // eslint-disable-next-line no-bitwise
-    expect(section.compareDocumentPosition(confirm) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(section.compareDocumentPosition(confirm) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBeTruthy();
     expect(confirm).toBeEnabled();
   });
 
   it('un nombre parecido el mismo día también avisa', () => {
-    mockFetches({ preview: { ...basePreview, warnings: [{ ...warning, kind: 'nombre_parecido', activityName: 'Fxi' }] } });
+    mockFetches({
+      preview: { ...basePreview, warnings: [{ ...warning, kind: 'nombre_parecido', activityName: 'Fxi' }] },
+    });
 
     renderPanel();
 

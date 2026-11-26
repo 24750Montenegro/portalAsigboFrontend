@@ -6,7 +6,7 @@ import styles from './ImportHoursPanel.module.css';
 
 const PAGE_SIZE = 50;
 
-/** La vista previa fila por fila: qué le pasa a cada fila del archivo antes de confirmar. Paginada de 50 en 50. */
+/** Vista previa de cada fila antes de confirmar, paginada de 50 en 50. */
 function HoursRowsTable({ rows }) {
   const [page, setPage] = useState(0);
   useEffect(() => setPage(0), [rows]);

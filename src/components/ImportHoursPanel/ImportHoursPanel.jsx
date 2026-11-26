@@ -121,15 +121,21 @@ function ImportHoursPanel({ mode, idActivity, onDone }) {
               <code>{format}</code>
             </React.Fragment>
           ))}
-          {'. La hora también puede llevar segundos ('}
+          . La hora también puede llevar segundos (
           <code>HH:mm:ss</code>
           {'); los segundos se ignoran. Con barras siempre es día/mes: 05/11/2026 es el 5 de noviembre. '}
-          Sin hora, se usa la actividad con ese nombre y eje de ese día (si no existe, se crea a las 00:00).
+          Sin hora, se usa la actividad con ese nombre y eje de ese día (si no existe,
+          se crea a las 00:00).
         </p>
       )}
 
       <div className={styles.actions}>
-        <Button text={loadingTemplate ? 'Descargando…' : 'Descargar plantilla'} emptyBlue onClick={handleTemplate} disabled={loadingTemplate} />
+        <Button
+          text={loadingTemplate ? 'Descargando…' : 'Descargar plantilla'}
+          emptyBlue
+          onClick={handleTemplate}
+          disabled={loadingTemplate}
+        />
       </div>
       {templateError && <p className={styles.error} role="alert">{templateError.message}</p>}
 
@@ -223,7 +229,7 @@ function ImportHoursPanel({ mode, idActivity, onDone }) {
             </p>
           )}
 
-          {/* Avisos y actividades nuevas van antes de la tabla y del botón: es lo primero que hay que revisar. */}
+          {/* Avisos y actividades nuevas son lo primero que hay que revisar. */}
           <HoursWarnings warnings={preview.warnings ?? []} />
           <ActivitiesToCreate activities={preview.activitiesToCreate ?? []} />
 

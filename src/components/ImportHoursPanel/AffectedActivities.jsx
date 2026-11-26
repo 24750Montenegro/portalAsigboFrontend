@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { formatGuatemalaDateTime } from '@helpers/hoursImportPreview';
 import styles from './ImportHoursPanel.module.css';
 
-/** Tras confirmar: las actividades que recibieron horas o se crearon, con enlace a sus participantes. */
+/** Actividades que recibieron horas o se crearon, con enlace a sus participantes. */
 function AffectedActivities({ activities }) {
   if (activities.length === 0) return null;
   return (

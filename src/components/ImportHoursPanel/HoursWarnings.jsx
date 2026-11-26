@@ -8,14 +8,15 @@ const describe = (warning) => (warning.kind === 'nombre_parecido'
   ? `«${warning.activityName}» se parece a una actividad que ya existe ese día en ${warning.areaName}`
   : `Ya existe «${warning.activityName}» en ${warning.areaName} con otra fecha`);
 
-/** Avisos de posible duplicado. No bloquean la confirmación: solo piden revisar el nombre y la fecha. */
+/** Avisos de posible duplicado que no bloquean la confirmación. */
 function HoursWarnings({ warnings }) {
   if (warnings.length === 0) return null;
   return (
     <section aria-labelledby="hours-warnings" className={`${styles.block} ${styles.warning}`}>
       <h3 id="hours-warnings" className={styles.sectionTitle}>Posibles actividades duplicadas</h3>
       <p className={styles.instructions}>
-        Revise el nombre y la fecha: si es la misma actividad, corrija el archivo y vuelva a subirlo.
+        Revise el nombre y la fecha: si es la misma actividad, corrija el archivo y vuelva a
+        subirlo.
         Si de verdad es otra actividad, puede confirmar.
       </p>
       <ul className={styles.list}>
