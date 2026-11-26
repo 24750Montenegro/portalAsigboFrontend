@@ -13,6 +13,7 @@ import useUserInfo from '../../hooks/useUserInfo';
 import NotFound from '../NotFoundPage';
 import { serverHost } from '../../config';
 import ActivityTable from '../../components/ActivityAssignmentTable';
+import ServiceHoursCertificate from '../../components/ServiceHoursCertificate/ServiceHoursCertificate';
 
 /*----------------------------------------------------------------------------------------------*/
 
@@ -105,6 +106,7 @@ function UserServiceHoursSummaryPage({ userId }) {
         <LoadingView />
       ) : (
         <div className={styles.infoBlock}>
+          <ServiceHoursCertificate userId={userId} />
           <div className={styles.serviceBlock}>
             <div className={styles.serviceDetails}>
               <div className={styles.totalHours}>

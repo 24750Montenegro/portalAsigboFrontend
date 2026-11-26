@@ -1,0 +1,15 @@
+.certificate {
+  margin: 28px 0;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+}
+
+.certificate h3 { margin: 0 0 8px; }
+.certificate p { margin: 0 0 14px; }
+.controls { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; }
+.controls label { display: flex; flex-direction: column; gap: 4px; }
+.controls input, .controls button { padding: 9px; border-radius: 5px; border: 1px solid #aaa; }
+.controls button { background: #164c79; color: white; cursor: pointer; border-color: #164c79; }
+.controls button:disabled { opacity: .6; cursor: wait; }
+.certificate [role="alert"] { color: #a40000; margin-top: 12px; }
