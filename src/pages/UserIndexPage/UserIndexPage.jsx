@@ -18,6 +18,7 @@ import UserProfileIndexPage from '../UserProfileIndexPage/UserProfileIndexPage';
 import ResponsibleActivitiesPage from '../ResponsibleActivitiesPage';
 import NewActivityPage from '../NewActivityPage/NewActivityPage';
 import ActivityAssignmentDetailsPage from '../ActivityAssignmentDetailsPage/ActivityAssignmentDetailsPage';
+import MyAssignmentDetailsPage from '../MyAssignmentDetailsPage';
 
 function UserIndexPage() {
   const token = useToken();
@@ -33,6 +34,7 @@ function UserIndexPage() {
         <Route path="/panel" element={<WorkPanelPage />} />
         <Route path="*" element={<NotFoundPage />} />
         <Route path="/actividad/:idActividad/*" element={<ActivityDetailsPage />} />
+        <Route path="/actividad/:activityId/mi-asignacion" element={<MyAssignmentDetailsPage />} />
         <Route path="/perfil" element={<SimpleUserProfilePage idUser={user.id} />} />
         <Route path="/perfil/editar" element={<UpdateUserPage userId={user.id} />} />
         <Route path="/usuario/:userId" element={<UserProfileIndexPage />} />

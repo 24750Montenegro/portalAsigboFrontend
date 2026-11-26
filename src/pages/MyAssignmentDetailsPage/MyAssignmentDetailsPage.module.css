@@ -1,0 +1,21 @@
+.myAssignmentDetailsPage{
+  padding: var(--page-vertical-padding--) var(--page-horizontal-padding--);
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.sectionTitle{
+  font-size: var(--h3-title-size--);
+  width: 100%;
+}
+
+.notes > div{
+  white-space: pre-wrap;
+}
+
+@media only screen and (max-width: 700px){
+  .sectionTitle{
+    text-align: center;
+  }
+}

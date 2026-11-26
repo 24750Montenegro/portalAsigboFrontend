@@ -1,0 +1,62 @@
+.assignmentSummary{
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  width: 100%;
+}
+
+.sectionTitle{
+  font-size: var(--h3-title-size--);
+  width: 100%;
+}
+
+.dataContainer{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 30px;
+  row-gap: 20px;
+  width: 100%;
+}
+
+.hoursContainer{
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.activityLink:hover{
+  text-decoration: underline;
+}
+
+.status{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.statusIcon{
+  display: flex;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+}
+
+.completed{
+  color: #2f8a3b;
+}
+
+.assigned{
+  color: var(--blue-theme-color--);
+}
+
+@media only screen and (max-width: 900px){
+  .hoursContainer{
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media only screen and (max-width: 700px){
+  .dataContainer,
+  .hoursContainer{
+    grid-template-columns: 1fr;
+  }
+}

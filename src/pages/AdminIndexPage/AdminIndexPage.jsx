@@ -11,6 +11,7 @@ import ActivityAssignmentDetailsPage from '@pages/ActivityAssignmentDetailsPage'
 import AvailableActivitiesPage from '@pages/AvailableActivitiesPage';
 import UsersReportPage from '@pages/UsersReportPage';
 import ImportHoursPage from '@pages/ImportHoursPage';
+import MyAssignmentDetailsPage from '@pages/MyAssignmentDetailsPage';
 import AreaDetailsPage from '../AreaDetailsPage/AreaDetailsPage';
 import NotFoundPage from '../NotFoundPage/NotFoundPage';
 import AdminConfiguration from '../AdminConfiguration/AdminConfiguration';
@@ -47,6 +48,7 @@ function AdminIndexPage() {
         <Route path="/actividad/importar-horas" element={<ImportHoursPage />} />
         <Route path="/actividad/disponible/*" element={<AvailableActivitiesPage />} />
         <Route path="/actividad/:activityId/asignacion/:userId" element={<ActivityAssignmentDetailsPage />} />
+        <Route path="/actividad/:activityId/mi-asignacion" element={<MyAssignmentDetailsPage />} />
         <Route path="/actividad/:idActividad/*" element={<ActivityDetailsPage />} />
         <Route path="/actividad/:idActividad/editar" element={<NewActivityPage />} />
         <Route path="/actividad/encargadas" element={<ResponsibleActivitiesPage />} />

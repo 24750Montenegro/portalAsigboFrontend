@@ -29,6 +29,7 @@ import consts from '../../helpers/consts';
 import AssignToActivityButton from '../../components/AssignToActivityButton/AssignToActivityButton';
 import useCount from '../../hooks/useCount';
 import ImportHoursPopUp from '../../components/ImportHoursPopUp';
+import Button from '../../components/Button';
 
 function ActivityDetailsPage() {
   const navigate = useNavigate();
@@ -169,6 +170,13 @@ function ActivityDetailsPage() {
           <h1>{activity ? activity.name : 'Actividad'}</h1>
 
           <div className={styles.headerButtonsContainer}>
+            {activity?.userAssignment && (
+              <Button
+                emptyBlue
+                text="Ver mi asignación"
+                onClick={() => navigate(`/actividad/${activity.id}/mi-asignacion`)}
+              />
+            )}
             {activity?.registrationAvailableForUser && !activity?.userAssignment
               && (
               <AssignToActivityButton
