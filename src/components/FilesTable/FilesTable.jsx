@@ -16,10 +16,33 @@ function FilesTable({ files, className }) {
             <div>{file.type?.indexOf('image') !== -1 ? <ImageIcon /> : <FileIcon />}</div>
           </td>
           <td className={styles.nameRow}>
-            <a href={file.link ?? '#'} target="_blank" rel="noopener noreferrer">{file.name}</a>
+            {file.onPreview ? (
+              <span className={styles.fileName} title={file.name}>{file.name}</span>
+            ) : (
+              <a href={file.link ?? '#'} target="_blank" rel="noopener noreferrer">{file.name}</a>
+            )}
           </td>
-          <td className={styles.deleteRow}>
-            <div><Button red text="Eliminar" onClick={() => { if (file.onDelete) file.onDelete(file.id); }} /></div>
+          <td className={styles.actionsRow}>
+            <div>
+              {file.onPreview && (
+                <Button
+                  emptyBlue
+                  text="Ver"
+                  ariaLabel={`Ver ${file.name}`}
+                  onClick={() => file.onPreview(file.id)}
+                />
+              )}
+              {file.onDownload && (
+                <Button
+                  text="Descargar"
+                  ariaLabel={`Descargar ${file.name}`}
+                  onClick={() => file.onDownload(file.id)}
+                />
+              )}
+              {file.onDelete && (
+                <Button red text="Eliminar" onClick={() => file.onDelete(file.id)} />
+              )}
+            </div>
           </td>
         </TableRow>
       ))}
@@ -34,8 +57,10 @@ FilesTable.propTypes = {
     id: PropTypes.string,
     name: PropTypes.string,
     type: PropTypes.string,
-    onDelete: PropTypes.func,
     link: PropTypes.string,
+    onPreview: PropTypes.func,
+    onDownload: PropTypes.func,
+    onDelete: PropTypes.func,
   })),
   className: PropTypes.string,
 };

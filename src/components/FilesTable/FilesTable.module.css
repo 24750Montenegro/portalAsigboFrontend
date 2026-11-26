@@ -1,5 +1,5 @@
 .typeRow > div,
-.deleteRow > div{
+.actionsRow > div{
   display: flex;
   align-items: center;
   justify-content: center;
@@ -12,8 +12,10 @@
   padding-left: 15px;
 }
 
-
-.deleteRow > div{
+.actionsRow > div{
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
   padding-right: 15px;
 }
 
@@ -21,19 +23,22 @@
   color: gray;
 }
 
-.deleteRow svg{
-  font-size: 20px;
-  color: rgb(196, 2, 2);
-  cursor: pointer;
-}
-
 .nameRow a:hover{
   text-decoration: underline;
+}
+
+.nameRow a,
+.fileName{
+  word-break: break-word;
 }
 
 /*Debe coincidir con el breakpoint de la tabla*/
 @media only screen and (max-width: 700px){
   .nameRow{
     text-align: center !important;
+  }
+  .actionsRow > div{
+    justify-content: center;
+    padding: 0;
   }
 }

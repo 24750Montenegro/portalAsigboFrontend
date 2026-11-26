@@ -1,3 +1,14 @@
+import { serverHost } from '../config';
+import consts from './consts';
+
+export const assignmentFileUrl = (fileName) => (
+  `${serverHost}/${consts.imageRoute.assignment}/${encodeURIComponent(fileName)}`
+);
+
+export const isPdfFile = (fileName) => /\.pdf$/i.test(fileName ?? '');
+
+export const assignmentFileType = (fileName) => (isPdfFile(fileName) ? 'application/pdf' : 'image');
+
 /**
  * Límites de los archivos adjuntos de una asignación. Deben coincidir con el backend
  * (`consts.assignmentFiles` y `consts.uploadFileSizeLimit.files`).
