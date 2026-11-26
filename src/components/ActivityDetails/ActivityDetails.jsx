@@ -9,22 +9,7 @@ import CheckIcon from '../../assets/icons/CheckIcon';
 import EnrolledIcon from '../../assets/icons/EnrolledIcon';
 import consts from '../../helpers/consts';
 import randomString from '../../helpers/randomString';
-
-const hoursLabel = (hours) => `${hours} ${hours === 1 ? 'hora' : 'horas'}`;
-
-/**
- * Horas efectivas del becado en la actividad (base + ajuste, nunca menos de 0) y el desglose
- * cuando hay ajuste. El ajuste es negativo cuando se le registraron menos horas que las base
- * (p. ej. por CSV).
- */
-const serviceHoursText = (baseHours, adjustment = 0) => {
-  if (!adjustment) return hoursLabel(baseHours);
-  const total = hoursLabel(Math.max(0, baseHours + adjustment));
-  if (adjustment > 0) {
-    return `${total} (${baseHours} base + ${adjustment} ${adjustment > 1 ? 'adicionales' : 'adicional'})`;
-  }
-  return `${total} (${baseHours} base − ${-adjustment} de ajuste)`;
-};
+import { serviceHoursText } from '../../helpers/serviceHours';
 
 function ActivityDetails({ className, data }) {
   const [isEnrolled, setIsEnrolled] = useState(false);
