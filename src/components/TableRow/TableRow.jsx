@@ -48,7 +48,7 @@ function TableRow({
         </td>
       )}
 
-      {React.Children.map(children, (child, index) => React.cloneElement(child, {
+      {React.Children.toArray(children).map((child, index) => React.cloneElement(child, {
         'data-header': header[index],
         style: { ...(child.props.style ?? {}), maxWidth: maxCellWidth, minWidth: minCellWidth },
       }))}

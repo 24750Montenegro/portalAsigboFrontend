@@ -18,6 +18,16 @@
   text-decoration: underline;
 }
 
+.detailLink {
+  color: var(--blue-theme-color--);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.detailLink:hover {
+  text-decoration: underline;
+}
+
 .pagination {
   margin-block: 15px;
 }

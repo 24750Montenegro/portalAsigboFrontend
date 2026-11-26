@@ -13,6 +13,8 @@ import useUserInfo from '../../hooks/useUserInfo';
 import NotFound from '../NotFoundPage';
 import { serverHost } from '../../config';
 import ActivityTable from '../../components/ActivityAssignmentTable';
+import useSessionData from '../../hooks/useSessionData';
+import consts from '../../helpers/consts';
 
 /*----------------------------------------------------------------------------------------------*/
 
@@ -44,6 +46,16 @@ function UserServiceHoursSummaryPage({ userId }) {
   } = useUserInfo(userId);
 
   const activitiesCompleted = loggedInfo?.serviceHours.activitiesCompleted ?? 0;
+
+  const sessionUser = useSessionData();
+  const isOwnProfile = sessionUser?.id === userId;
+  const canSeeOthersAssignments = sessionUser?.role?.includes(consts.roles.admin);
+  let getAssignmentDetailUrl = null;
+  if (isOwnProfile) {
+    getAssignmentDetailUrl = (assignment) => `/actividad/${assignment.activity.id}/mi-asignacion`;
+  } else if (canSeeOthersAssignments) {
+    getAssignmentDetailUrl = (assignment) => `/actividad/${assignment.activity.id}/asignacion/${userId}`;
+  }
 
   // Si no encuentra al usuario o hay algún error relacionado con la información
   // se tomará como datos no encontrados
@@ -168,8 +180,8 @@ function UserServiceHoursSummaryPage({ userId }) {
             </div>
           </div>
           <div className={styles.allActivities}>
-            <h3>Actividades Realizadas</h3>
-            <ActivityTable id={userId} />
+            <h3>{isOwnProfile ? 'Mis actividades' : 'Actividades Realizadas'}</h3>
+            <ActivityTable id={userId} getDetailUrl={getAssignmentDetailUrl} />
           </div>
         </div>
       )}

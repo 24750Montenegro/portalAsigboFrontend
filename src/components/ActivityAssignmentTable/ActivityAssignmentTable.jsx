@@ -13,6 +13,7 @@ import { serverHost } from '../../config';
 import useAssignment from '../../hooks/useAssignment';
 import useToken from '../../hooks/useToken';
 import getTokenPayload from '../../helpers/getTokenPayload';
+import { effectiveServiceHours } from '../../helpers/serviceHours';
 
 /*----------------------------------------------------------------------------------------------*/
 /**
@@ -29,7 +30,7 @@ import getTokenPayload from '../../helpers/getTokenPayload';
 
 /*----------------------------------------------------------------------------------------------*/
 
-function ActivityAssignmentTable({ /* loading, data, */ listingType, id }) {
+function ActivityAssignmentTable({ /* loading, data, */ listingType, id, getDetailUrl }) {
   // Estados
   const token = useToken();
   const userInfo = getTokenPayload(token);
@@ -155,6 +156,7 @@ function ActivityAssignmentTable({ /* loading, data, */ listingType, id }) {
             'Completado',
             'Fecha',
             'Eje',
+            ...(getDetailUrl ? ['Detalle'] : []),
           ]}
           breakPoint="1110px"
           showCheckbox={false}
@@ -176,7 +178,9 @@ function ActivityAssignmentTable({ /* loading, data, */ listingType, id }) {
                     {value.activity.name}
                   </NavLink>
                 </td>
-                <td>{value.activity.serviceHours + (value.aditionalServiceHours ?? 0)}</td>
+                <td>
+                  {effectiveServiceHours(value.activity.serviceHours, value.aditionalServiceHours)}
+                </td>
                 <td>{value.completed ? 'Si' : 'No'}</td>
                 <td>
                   {dayjs(value.activity.date).format('DD/MM/YYYY')}
@@ -189,6 +193,17 @@ function ActivityAssignmentTable({ /* loading, data, */ listingType, id }) {
                     title={value.activity.asigboArea.name}
                   />
                 </td>
+                {getDetailUrl && (
+                  <td>
+                    <NavLink
+                      className={styles.detailLink}
+                      to={getDetailUrl(value)}
+                      aria-label={`Ver detalle de ${value.activity.name}`}
+                    >
+                      Ver detalle
+                    </NavLink>
+                  </td>
+                )}
               </TableRow>
             ))}
         </Table>
@@ -214,6 +229,7 @@ ActivityAssignmentTable.propTypes = {
   data: PropTypes.instanceOf(Object), */
   id: PropTypes.string,
   listingType: PropTypes.oneOf(['enrolled', 'byArea']),
+  getDetailUrl: PropTypes.func,
 };
 
 ActivityAssignmentTable.defaultProps = {
@@ -221,6 +237,7 @@ ActivityAssignmentTable.defaultProps = {
   data: undefined, */
   id: '',
   listingType: 'enrolled',
+  getDetailUrl: null,
 };
 
 /*----------------------------------------------------------------------------------------------*/
